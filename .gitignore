@@ -1,0 +1,37 @@
+# Node (the link checker brings its own)
+node_modules/
+npm-debug.log*
+.npm/
+
+# Tooling caches
+.cache/
+.biome-cache/
+
+# Python
+dist/
+*.egg-info/
+.coverage
+.coverage.*
+uv.lock
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.venv/
+
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+*.swp
+*~
+.idea/
+.vscode/
+
+# OpenCode agent session/continuation state - machine cruft, not repo content
+.omo/
+
+# A real graph pointed at by LOGSEQ_MD_TEST_GRAPH for the local-only round-trip
+# gate. Nothing from a personal graph belongs in this repository, and a stray
+# copy here is how that stops being true.
+/graph/
+/scratch/

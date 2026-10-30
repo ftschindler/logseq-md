@@ -1,0 +1,61 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "logseq-md"
+# Written by the release job on merge, never in a pull request: a hand-bumped
+# version disagrees with its tag the first time somebody forgets, and every
+# concurrent pull request touches this one line and conflicts on merge. What a
+# pull request carries instead is a label saying how big it is.
+version = "0.0.0"
+description = "Read and write file-based Logseq markdown graphs from the command line"
+readme = "README.md"
+requires-python = ">=3.11"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "Felix Schindler" }]
+keywords = ["logseq", "markdown", "outliner", "notes", "cli"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Environment :: Console",
+  "Intended Audience :: Developers",
+  "Intended Audience :: End Users/Desktop",
+  "Operating System :: Microsoft :: Windows",
+  "Operating System :: POSIX :: Linux",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Topic :: Text Processing :: Markup :: Markdown",
+  "Topic :: Utilities",
+]
+# None yet, and the bar for adding one is high: this reads and writes markdown
+# files, and the whole point of the write path is that it does not hand the file
+# to a serialiser. A dependency that parses markdown is the thing most likely to
+# arrive carrying one.
+dependencies = []
+
+[project.urls]
+Homepage = "https://github.com/ftschindler/logseq-md"
+Source = "https://github.com/ftschindler/logseq-md"
+Issues = "https://github.com/ftschindler/logseq-md/issues"
+
+# The distribution and the command share a name, so `uvx logseq-md` resolves the
+# distribution and runs the command inside it with no `--from`. That is the
+# reason the name was chosen, and `.scripts/check_uvx_invocation.py` fails the
+# suite on the longer form so the documentation cannot drift back into it.
+[project.scripts]
+logseq-md = "logseq_md.cli:run"
+
+[dependency-groups]
+dev = ["pytest>=8"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/logseq_md"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+# `--strict-markers`, so a typo in a marker is an error rather than a test that
+# silently never runs under the selector that was supposed to find it.
+addopts = "--strict-markers"
+markers = ["graph: runs against a real graph named by LOGSEQ_MD_TEST_GRAPH; never in CI"]

@@ -1,0 +1,28 @@
+---
+version: 2
+updates:
+# Bump pinned pre-commit hook SHAs (keeps the frozen revisions current).
+- package-ecosystem: pre-commit
+  directory: /
+  schedule:
+    interval: weekly
+  commit-message:
+    prefix: "chore(pre-commit)"
+
+# Bump pinned GitHub Actions SHAs.
+- package-ecosystem: github-actions
+  directory: /
+  schedule:
+    interval: weekly
+  commit-message:
+    prefix: "chore(actions)"
+
+# Python dependencies. There are none yet beyond the dev group, and the entry
+# is here so the first one added is watched from the day it lands rather than
+# from the day somebody remembers this file.
+- package-ecosystem: uv
+  directory: /
+  schedule:
+    interval: weekly
+  commit-message:
+    prefix: "chore(deps)"

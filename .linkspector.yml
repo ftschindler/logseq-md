@@ -1,0 +1,18 @@
+---
+dirs:
+- .
+fileExtensions:
+- md
+useGitIgnore: true
+excludedDirs:
+# Graph fixtures carry whatever links a real page carries, including dead ones,
+# because that is what they are testing the parser against.
+- ./tests/fixtures
+ignorePatterns:
+- pattern: '^mailto:'
+aliveStatusCodes:
+- 200
+- 206
+- 429  # rate-limited, but the target exists
+timeout: 10000
+retryCount: 3

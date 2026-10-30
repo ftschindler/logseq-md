@@ -1,0 +1,30 @@
+# EditorConfig - editor-layer half of LF enforcement (see .gitattributes and the
+# mixed-line-ending pre-commit hook for the other two layers).
+# https://editorconfig.org
+root = true
+
+[*]
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+charset = utf-8
+indent_style = space
+indent_size = 2
+
+# What ruff-format emits, written down so an editor does not fight it.
+[*.py]
+indent_size = 4
+
+[*.{json,jsonc,yaml,yml,toml,md}]
+indent_size = 2
+
+[Makefile]
+indent_style = tab
+
+# Logseq's own files, for whenever fixtures land here. The format is tab
+# indented and that is not a preference: a fixture reindented to spaces stops
+# testing what it was written to test.
+[tests/fixtures/**]
+indent_style = tab
+trim_trailing_whitespace = false
+insert_final_newline = false

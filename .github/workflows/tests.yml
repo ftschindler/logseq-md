@@ -1,0 +1,145 @@
+---
+name: Tests
+
+# Pull requests only, and deliberately. GitHub builds a pull request's checks
+# against the head merged into `main`, so what these jobs run on is already the
+# merge result rather than the branch in isolation - running them again after
+# the merge tests a tree that passed a minute earlier.
+#
+# `workflow_dispatch` remains, which is how `main` gets asked the question by
+# hand: after a bootstrap commit, or when a dependency moved underneath a tree
+# nobody has touched.
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: tests_${{ github.head_ref || github.ref_name }}
+  cancel-in-progress: true
+
+jobs:
+  suite:
+    # Both operating systems, because the failures portability costs us are
+    # exactly the ones a single-platform matrix cannot see: a path separator
+    # baked into a fixture, a file written in the console's code page rather
+    # than UTF-8, a line ending normalised on checkout. This package reads and
+    # writes text files for a living, so all three are live risks.
+    #
+    # Both ends of the supported range, because `requires-python` claims 3.11
+    # and nothing else checks that claim.
+    name: 🛠 (Tests, py${{ matrix.python }}, ${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python: ["3.11", "3.13"]
+    timeout-minutes: 10
+    steps:
+
+    - name: Checkout
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+
+    - name: Setup uv
+      uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d  # v10.0.1
+      with:
+        python-version: ${{ matrix.python }}
+        # There is no lockfile here on purpose, so the cache is keyed on the
+        # files that actually name a dependency: the project's own metadata and
+        # the PEP 723 headers in `.scripts/`. Left to the default globs the
+        # action would match a lockfile that does not exist, say so, and keep a
+        # cache that can never be invalidated.
+        cache-dependency-glob: |
+          pyproject.toml
+          .scripts/*.py
+
+    - name: Refuse a checkout whose symlinks did not survive
+      # A Windows runner clones without `core.symlinks`, so a committed symlink
+      # arrives as a text file holding its target path and everything reading
+      # through it reads that string. The guard runs here as well as in
+      # pre-commit so the job says which failure it is.
+      run: uv run --script .scripts/check_no_symlinks.py
+
+    - name: Run the suite
+      run: uv run --group dev pytest
+
+  smoke:
+    # The sentence the README makes, run rather than asserted: a machine with
+    # nothing installed, one command, and the command answers.
+    #
+    # It installs this branch's wheel rather than `logseq-md` from the index,
+    # which would resolve to the last release and green-light code it never ran.
+    name: 💨 (install and run, ${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    timeout-minutes: 10
+    defaults:
+      run:
+        # Windows runners have bash, and one shell here means one spelling of
+        # the glob below rather than two branches of the same three lines.
+        shell: bash
+    steps:
+
+    - name: Checkout
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+
+    - name: Setup uv
+      uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d  # v10.0.1
+      with:
+        cache-dependency-glob: |
+          pyproject.toml
+          .scripts/*.py
+
+    - name: Build the wheel a user would install
+      run: uv build --wheel --out-dir dist
+
+    - name: Check the distribution is one an index would accept
+      # `--strict`, so a warning is a failure. Asked on every pull request
+      # rather than discovered by the first release, which is where a
+      # misconfigured name or a malformed classifier otherwise surfaces.
+      run: uvx twine check --strict dist/*
+
+    - name: Run the command out of that wheel
+      # `uv run --with` rather than uvx: the wheel is a local file, and this is
+      # the spelling that installs it into a throwaway environment and runs the
+      # console script it declares. If the entry point in `pyproject.toml` is
+      # wrong, this is the step that says so.
+      run: |
+        set -euo pipefail
+        wheel=$(ls dist/*.whl)
+        uv run --no-project --with "${wheel}" logseq-md --version
+        uv run --no-project --with "${wheel}" logseq-md --help
+
+  tests:
+    name: 🛠 (Tests)
+    # The single job branch protection requires. A matrix job's check is named
+    # after the axis it ran on, so requiring those directly means editing the
+    # protection rule every time the matrix changes - and, worse, a job that
+    # stops being produced does not fail the rule, it silently stops being
+    # required. This one has a fixed name and fails unless every job above
+    # actually succeeded.
+    runs-on: ubuntu-latest
+    needs: [suite, smoke]
+    # `always()`, or this job is skipped the moment anything it needs fails, and
+    # a skipped required check is one that never reports.
+    if: always()
+    timeout-minutes: 2
+    steps:
+
+    - name: Report what each job did
+      run: echo '${{ toJSON(needs) }}'
+
+    - name: Fail unless every job above succeeded
+      # `skipped` and `cancelled` are failures here as much as `failure` is: the
+      # question this job answers is whether the suite ran and passed, and a job
+      # that did not run has not passed.
+      if: ${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') || contains(needs.*.result, 'skipped')
+        }}
+      run: exit 1
