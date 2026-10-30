@@ -46,7 +46,7 @@ repos:
 # ATTENTION: keep this rev's version in sync with the markdownlint-cli2 schema
 # URL in the check-jsonschema hook below.
 - repo: https://github.com/DavidAnson/markdownlint-cli2
-  rev: b82a6c8896e491b9cb377a99ff3412131920681b  # frozen: v0.23.2
+  rev: 341e2a331ba578029e66c2e01183e7a6b5ca9ab4  # frozen: v0.24.0
   hooks:
   - id: markdownlint-cli2
     args: ["--fix"]
