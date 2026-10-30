@@ -24,7 +24,7 @@ repos:
 
 # Python - lint + format.
 - repo: https://github.com/astral-sh/ruff-pre-commit
-  rev: e8f7d69b957a30acb2c875078d5fd012de24b64c  # frozen: v0.16.7
+  rev: 25bcf95026b96e2dd3c0aec3090c3d6ef6ca2e6c  # frozen: v0.17.3
   hooks:
   - id: ruff-check
     args: ["--fix"]
