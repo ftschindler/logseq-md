@@ -49,11 +49,11 @@ jobs:
     # `tests/`, so the type check is one hook rather than a second job: a
     # contributor who runs `make check` gets the same answer CI does, which is
     # the property worth having.
+    #
+    # It also covers every link in the tree. `linkspector-changed` is handed the
+    # changed files on the commit path and every file here, which is the whole
+    # sweep already: a separate `linkspector-all` step would drive the same
+    # browser over the same URLs a second time, double the runtime and double
+    # the chance of a throttled link failing the job.
     - name: Run pre-commit hooks
       run: uvx prek run --show-diff-on-failure --color=always --all-files
-
-    - name: Check every link in the tree, not just the changed ones
-      # The commit-path hook only sees changed files, by design, because a
-      # browser-backed check across the whole tree costs minutes. A link rots in
-      # a page nobody is editing, so the full sweep belongs here.
-      run: uvx prek run --hook-stage manual --color=always linkspector-all
