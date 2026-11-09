@@ -1,8 +1,8 @@
 # DESIGN - logseq-md
 
 **Status:** first draft. Nothing is implemented beyond the package frame. This document is the
-sole source of truth for the design, so change it here first. `IMPLEMENTATION.md` will say in
-which order it gets built, and is not written yet.
+sole source of truth for the design, so change it here first.
+[IMPLEMENTATION.md](IMPLEMENTATION.md) says in which order it gets built.
 
 **Date:** 2026-10-30
 
