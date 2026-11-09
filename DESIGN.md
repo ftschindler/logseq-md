@@ -535,9 +535,11 @@ filesystem and re-reads a file it sees change.
 
 - **The file is written atomically**, to a temporary file in the same directory and then
   renamed. The application's watcher never observes a half-written file.
-- **A write refuses if the file changed since it was read.** The comparison is cheap and the
-  failure mode it prevents is the expensive one. The remedy is to read again, which the caller
-  can do without help.
+- **A write refuses if the file changed since it was read.** Just before the rename, the file
+  is read again and compared byte for byte with what the write started from. Graph files are
+  small, so this costs little, and unlike a size and modification time it cannot be fooled by a
+  coarse clock or a sync tool restoring a timestamp. The remedy is to read again, which the
+  caller can do without help.
 
 That is the whole concurrency story, and it is deliberately small. A graph that syncs between
 devices has a third writer this tool cannot see, and [§15](#15-not-doing) is why that stays
@@ -565,7 +567,7 @@ Named graphs, a registry, a config file: [§15](#15-not-doing).
 
 ### The gate
 
-**Parse every file in a graph, write it back with no modification, and assert the bytes are
+**Parse every fixture file, write it back with no modification, and assert the bytes are
 identical.** Then do it again with one real mutation, and assert that every byte outside the
 spliced region is unchanged.
 
@@ -589,30 +591,41 @@ eight-level nesting, a decade of inconsistency. It is also somebody's private no
 colleagues' names, client references and internal URLs, and rule 8 of
 [§3](#3-rules-of-the-build) keeps all of it out of this repository.
 
-So the gate runs twice, in two places.
+**No test ever runs against a real graph.** A test that writes, run against somebody's notes,
+is one bug away from damaging them, and a test that only reads is one refactor away from
+writing. Tests see fixtures and nothing else, on every machine.
+
+A real graph is read by scripts instead, and only to decide which fixtures to write:
 
 | | Fixtures in the repository | A real graph |
 | --- | --- | --- |
-| Content | synthetic, hand-built per construct | whatever is actually there |
-| Where | every CI run | a developer's machine |
-| How | `make test` | `make test_graph`, with `LOGSEQ_MD_TEST_GRAPH` set |
+| Content | synthetic, small, one directory per topic | whatever is actually there |
+| Read by | the test suite, on every CI run | scripts in `.scripts/`, on a maintainer's machine |
+| Opened | for reading and writing, in a temporary copy | for reading only |
 | Finds | regressions, on every platform | the constructs nobody thought of |
 
-The synthetic fixtures are not a lesser version of the real thing. They are the record of what
-the real graph taught us, written down so that it keeps being checked after the graph is no
-longer reachable.
+The survey script reports what a graph contains as counts and shapes, never as text, and
+round-trips each file through the line model in memory. A construct it finds is handled once a
+fixture reproducing it lands, and not before.
 
-**A bug found by `test_graph` is not fixed until a fixture reproducing it lands in the
-repository.** That is a rule rather than good practice, and the reason is the asymmetry below.
+The fixtures are not a lesser version of the real thing. They are the record of what a real
+graph taught us, written down so that it keeps being checked on every platform and after the
+graph is no longer reachable.
 
-### Most contributors cannot run the strong gate
+### Proving a fixture leaked nothing
 
-`test_graph` needs a real Logseq graph, which most people reading this will not have. For them
-CI's green tick covers the synthetic fixtures only, and says nothing about the risk the project
-exists to manage. Nobody should infer more from it than that.
+A fixture is written by somebody who has just read a private graph, which is how a real line
+ends up in one. A read-only leak check compares every fixture line with the graph and fails on
+any match that is more than structure.
 
-The fixture rule above is what keeps that gap from widening. A finding that stays on one
-maintainer's machine protects one maintainer.
+It cannot run in CI, which has no graph. So it records evidence instead: one file per fixture
+directory, holding the hashes of that directory's fixtures and of the check itself, the outcome
+and a count of graph files scanned. It holds no path and no name from the graph. CI verifies
+offline that the evidence still describes the committed fixtures, so a fixture changed after
+its check is a red build rather than an oversight.
+
+That catches a copied line and not a paraphrase. Reading the fixture diff stays a reviewer's
+job.
 
 ### What the fixtures must cover
 
