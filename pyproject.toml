@@ -58,4 +58,3 @@ testpaths = ["tests"]
 # `--strict-markers`, so a typo in a marker is an error rather than a test that
 # silently never runs under the selector that was supposed to find it.
 addopts = "--strict-markers"
-markers = ["graph: runs against a real graph named by LOGSEQ_MD_TEST_GRAPH; never in CI"]

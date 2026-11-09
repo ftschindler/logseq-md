@@ -20,13 +20,6 @@ guard-%:
 test: | guard-uv
 	uv run --group dev pytest
 
-## Run the suite against a real graph named by LOGSEQ_MD_TEST_GRAPH (local only)
-# Never in CI, and never with anything from that graph copied in here. A
-# personal graph is the only corpus ugly enough to find the real bugs, and the
-# only one that must not be published.
-test_graph: | guard-uv
-	uv run --group dev pytest -m graph
-
 ## Build the wheel and the sdist into dist/
 build: | guard-uv
 	uv build --out-dir dist
@@ -39,4 +32,4 @@ check: | guard-uvx
 bootstrap: | guard-git guard-uvx
 	uvx prek install
 
-.PHONY: help test test_graph build check bootstrap
+.PHONY: help test build check bootstrap
