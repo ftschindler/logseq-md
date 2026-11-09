@@ -268,8 +268,6 @@ in `cli.py`.
   evidence file, when a recorded hash no longer matches the fixture or the leak script, when
   the recorded file set differs from the directory's, or when the outcome is not `pass`. It runs
   in CI and as a pre-commit hook.
-- Test layout without a real graph: the `test_graph` target leaves the `Makefile`, and the
-  `graph` marker and every mention of `LOGSEQ_MD_TEST_GRAPH` leave `pyproject.toml`.
 - `tests/test_round_trip.py`: every markdown file under `tests/fixtures/` read and written to a
   temporary path, byte-identical.
 - Fixtures under `tests/fixtures/lines/` for every line-level case in
