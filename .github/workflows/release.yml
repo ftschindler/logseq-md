@@ -1,0 +1,288 @@
+---
+name: Release
+
+# Every merge to main ships. The version lives in `pyproject.toml`, is written
+# here and never in a pull request. Two reasons, and the second is the one that
+# decided it: a hand-bumped version disagrees with its tag the first time
+# somebody forgets, and every concurrent pull request touches the same line and
+# conflicts on merge. What a pull request carries instead is a label saying how
+# big it is, which is a thing a reviewer already decides.
+#
+# An unpublished package is an untested release pipeline, which is why the first
+# version ships with this pipeline (IMPLEMENTATION.md, S0) rather than with the
+# first verb: the first real publish is the one that finds the misconfigured
+# name, the missing classifier and the trusted-publisher mismatch.
+#
+# The order of the steps below is the lesson from that first publish, and it is
+# not the one first drawn from it. The upload is the only step that cannot be
+# undone, so it goes last. Everything before it is revocable: a version written
+# into a working tree, a commit, a tag. What stopped the sibling's first release was a
+# malformed distribution, and `twine check --strict` now catches that before
+# anything is written at all.
+
+on:
+  pull_request:
+    types: [opened, reopened, labeled, unlabeled, synchronize]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  # Never cancelled in flight: a release half-done is a tag with no version
+  # behind it, or the reverse.
+  group: release_${{ github.head_ref || github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  bump_label:
+    name: 🏷 (the pull request says how big it is)
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+
+    - name: Checkout
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+      with:
+        fetch-depth: 0
+
+    - name: Setup uv
+      uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d  # v10.0.1
+      with:
+        cache-dependency-glob: |
+          pyproject.toml
+          .scripts/*.py
+
+    - name: Refuse a pull request without exactly one bump label
+      # Exactly one, not at least one: two labels is not a bigger bump, it is a
+      # disagreement, and picking the larger silently would release a major
+      # because somebody left `minor` on from an earlier round.
+      env:
+        LABELS: ${{ join(github.event.pull_request.labels.*.name, ' ') }}
+      run: |
+        set -euo pipefail
+        chosen=""
+        for label in ${LABELS}; do
+          case "${label}" in
+            major|minor|patch|no-release)
+              if [ -n "${chosen}" ]; then
+                echo "::error::Two bump labels (${chosen}, ${label}). One says what this change is."
+                exit 1
+              fi
+              chosen="${label}"
+              ;;
+          esac
+        done
+        if [ -z "${chosen}" ]; then
+          echo "::error::Label this pull request major, minor, patch or no-release."
+          echo "major: a setup that works stops working. minor: something new. patch: a fix."
+          echo "no-release: nothing that ships - CI, docs about the repo itself."
+          exit 1
+        fi
+        echo "This pull request is a ${chosen}."
+
+    - name: Refuse a hand-edited version
+      # The release job owns that one line. A pull request that also writes it
+      # gets overwritten on merge at best, and at worst ships a version the tag
+      # does not agree with, which is unfixable afterwards because the package is
+      # already on PyPI. The rest of `pyproject.toml` is free: a classifier or a
+      # dependency is an ordinary change, so this reads the diff rather than the
+      # file list.
+      run: uv run .scripts/version.py check-untouched "origin/${{ github.event.pull_request.base.ref }}"
+
+  release:
+    name: 🏷 (tag the merge)
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: pypi
+    permissions:
+      contents: write
+      # Trusted publishing: PyPI is told to trust this workflow in this
+      # repository, so there is no API token to leak, rotate or forget.
+      id-token: write
+    steps:
+
+    - name: Mint a token for the release bot
+      id: token
+      # The release commit has to pass the ruleset on main, and the token a job
+      # is handed by default cannot: it is deliberately not allowed to bypass
+      # rules, which is the right default everywhere except here. An app
+      # installed on this repository can be. It holds one permission
+      # (contents: write), the token it mints expires within the hour, and it is
+      # not a person - so revoking it touches nobody's own access and the release
+      # commits read as a bot's rather than as a maintainer's.
+      #
+      # Configured by hand, once, by somebody with admin: the app, its
+      # installation here, the two secrets below, and an entry for the app in
+      # the bypass list of the ruleset protecting main. The last of those is not
+      # a permission and is the one that gets forgotten; without it this pushes
+      # and is declined. IMPLEMENTATION.md, S0, lists the steps.
+      uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1  # v3.2.0
+      with:
+        # The client id rather than the numeric app id, which the action now
+        # deprecates. Both name the same app; the client id is the one GitHub
+        # has standardised on, and it is on the app's own settings page beside
+        # the id it replaces.
+        client-id: ${{ secrets.RELEASE_APP_CLIENT_ID }}
+        private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
+
+    - name: Checkout
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+      with:
+        fetch-depth: 0
+        token: ${{ steps.token.outputs.token }}
+
+    - name: Setup uv
+      uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d  # v10.0.1
+      with:
+        cache-dependency-glob: |
+          pyproject.toml
+          .scripts/*.py
+
+    - name: Find the bump this merge asked for
+      id: bump
+      # From the pull request the commit came in on, because that is where a
+      # person judged the change as a whole. A push straight to main has no such
+      # judgement and releases nothing: silence is the safe reading, since the
+      # alternative is guessing a severity for a change nobody reviewed.
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        set -euo pipefail
+        labels=$(gh api "repos/${{ github.repository }}/commits/${{ github.sha }}/pulls" \
+          --jq '.[0].labels[].name' || true)
+        level=""
+        for label in ${labels}; do
+          case "${label}" in
+            major|minor|patch) level="${label}" ;;
+            no-release) level="none" ;;
+          esac
+        done
+        if [ -z "${level}" ]; then
+          echo "No bump label on the pull request this commit arrived in; nothing to release."
+          level="none"
+        fi
+        echo "level=${level}" >> "${GITHUB_OUTPUT}"
+
+    - name: Work out the next version
+      id: version
+      if: steps.bump.outputs.level != 'none'
+      env:
+        LEVEL: ${{ steps.bump.outputs.level }}
+      run: |
+        set -euo pipefail
+        current=$(uv run .scripts/version.py current)
+        next=$(uv run .scripts/version.py next "${LEVEL}")
+        echo "current=${current}" >> "${GITHUB_OUTPUT}"
+        echo "next=${next}" >> "${GITHUB_OUTPUT}"
+        echo "Releasing ${current} -> ${next}."
+
+    - name: Work out who the bot commits as
+      id: identity
+      if: steps.bump.outputs.level != 'none'
+      # A bot's noreply address has to carry its numeric user id, and a commit
+      # whose address does not match is attributed to nobody - it renders as a
+      # grey avatar and links nowhere, which is how a history stops answering
+      # "who did this". The id is asked for rather than pasted in because the app
+      # it belongs to is created by hand, and a number hardcoded here is one
+      # nobody will think to change.
+      env:
+        GH_TOKEN: ${{ steps.token.outputs.token }}
+        SLUG: ${{ steps.token.outputs.app-slug }}
+      run: |
+        set -euo pipefail
+        id=$(gh api "/users/${SLUG}[bot]" --jq .id)
+        echo "name=${SLUG}[bot]" >> "${GITHUB_OUTPUT}"
+        echo "email=${id}+${SLUG}[bot]@users.noreply.github.com" >> "${GITHUB_OUTPUT}"
+
+    - name: Write the version into the working tree
+      if: steps.bump.outputs.level != 'none'
+      env:
+        NEXT: ${{ steps.version.outputs.next }}
+      run: uv run .scripts/version.py write "${NEXT}"
+
+    - name: Build the distribution
+      if: steps.bump.outputs.level != 'none'
+      # Both artefacts: the wheel is what uvx resolves and runs, and the sdist is
+      # what anybody packaging this downstream needs.
+      run: uv build --out-dir dist
+
+    - name: Check the distribution before anyone sees it
+      if: steps.bump.outputs.level != 'none'
+      # `--strict`, so a warning is a failure. This is the half of the upload's
+      # validation that can be run without an index, and the half that stopped
+      # the sibling's first release: a metadata version the pinned twine did not know.
+      # Running it here rather than inside the publish step means it fails
+      # before anything has been written anywhere.
+      #
+      # The other half, what an index will actually accept, is answered on every
+      # pull request by the rehearsal workflow.
+      run: uvx twine check --strict dist/*
+
+    - name: Commit the version and tag it
+      if: steps.bump.outputs.level != 'none'
+      # Before the upload, and this is deliberate: the upload is the only step
+      # here that cannot be undone, so it goes last, once everything that can be
+      # has already succeeded.
+      #
+      # If this step fails, nothing has been published and the version number is
+      # still free. If it ran after the upload instead, a push declined by the
+      # ruleset - the exact failure the bypass list exists to prevent - would
+      # leave PyPI holding a version this repository never recorded, and PyPI
+      # has no delete-and-reuse, only yank.
+      #
+      # One commit carrying the version, and the tag on that commit rather than
+      # on the merge: a tag whose tree holds the previous version is a release
+      # that installs as its predecessor, and nothing downstream can tell.
+      #
+      # **One push, carrying both refs.** As two pushes, federated-agent-kits shipped
+      # 0.13.0's commit and then had its tag rejected with "missing necessary objects":
+      # the second pack holds the tag alone, because the commit it points at
+      # went up a moment earlier, and a receiving replica that has not seen that
+      # commit yet reads the pack as incomplete. One push puts both in one pack
+      # and closes the window. `--atomic` then makes the pair all-or-nothing,
+      # which is what the concurrency group at the top of this file is for: a
+      # half-done release is a tag with no version behind it, or the reverse.
+      env:
+        NEXT: ${{ steps.version.outputs.next }}
+        BOT_NAME: ${{ steps.identity.outputs.name }}
+        BOT_EMAIL: ${{ steps.identity.outputs.email }}
+      run: |
+        set -euo pipefail
+        git config user.name "${BOT_NAME}"
+        git config user.email "${BOT_EMAIL}"
+        git add pyproject.toml
+        git commit -m "Release ${NEXT}"
+        git tag -a "v${NEXT}" -m "Release ${NEXT}"
+        git push --atomic origin HEAD:main "refs/tags/v${NEXT}"
+
+    - name: Publish to PyPI
+      if: steps.bump.outputs.level != 'none'
+      # Last, because it is the one thing that cannot be taken back. A failure
+      # here leaves a tag naming a version that is not on the index, which is a
+      # tag to delete and a number still free to reuse. That is the cheap half
+      # of the only trade available: there is no transaction across an index and
+      # a git remote, so something has to be the orphan, and a deletable tag is
+      # a better orphan than an unpublishable version.
+      #
+      # One index. A rehearsal that is allowed to fail protects nothing, and one
+      # that is not blocks releases on an index that expires its projects. The
+      # rehearsal belongs on pull requests, where it is free, and that is where
+      # it is.
+      uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33  # v1.14.2
+
+    - name: Announce it
+      if: steps.bump.outputs.level != 'none'
+      env:
+        GH_TOKEN: ${{ github.token }}
+        NEXT: ${{ steps.version.outputs.next }}
+      run: |-
+        set -euo pipefail
+        gh release create "v${NEXT}" \
+          --title "v${NEXT}" \
+          --notes "\`uvx logseq-md@${NEXT} --help\`" \
+          --generate-notes \
+          --verify-tag
