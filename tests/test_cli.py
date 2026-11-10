@@ -14,7 +14,8 @@ import sys
 import pytest
 
 from logseq_md import __version__
-from logseq_md.cli import OK, build_parser, main
+from logseq_md.cli import HANDLERS, build_parser, main, placeholders
+from logseq_md.exits import BAD_ARGUMENTS, OK, Refusal
 
 
 def test_version_is_not_empty() -> None:
@@ -55,3 +56,54 @@ def test_module_runs_as_a_subprocess() -> None:
     )
     assert completed.returncode == OK
     assert __version__ in completed.stdout
+
+
+#: Every verb in DESIGN.md section 10.
+VERBS = [
+    "blocks",
+    "show",
+    "backlinks",
+    "pages",
+    "properties",
+    "ensure-id",
+    "set-property",
+    "append-child",
+    "set-content",
+    "set-marker",
+]
+
+
+def test_every_verb_is_registered_with_a_handler() -> None:
+    assert sorted(HANDLERS) == sorted(VERBS)
+
+
+@pytest.mark.parametrize("verb", VERBS)
+def test_every_verb_has_help_with_an_example(verb: str, capsys: pytest.CaptureFixture[str]) -> None:
+    with pytest.raises(SystemExit) as raised:
+        main([verb, "--help"])
+    assert raised.value.code == OK
+    printed = capsys.readouterr().out
+    assert f"logseq-md {verb}" in printed
+    assert "example:" in printed
+
+
+def test_verbs_still_on_a_placeholder() -> None:
+    # S10 asserts this is empty. Until then it names what is left, so a stage
+    # that implements a verb has to say so here.
+    assert placeholders() == sorted(VERBS)
+
+
+def test_a_placeholder_exits_2(capsys: pytest.CaptureFixture[str]) -> None:
+    assert main(["properties"]) == BAD_ARGUMENTS
+    assert "not implemented yet" in capsys.readouterr().err
+
+
+def test_a_refusal_becomes_its_message_and_code(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    def refuse(_args: object) -> int:
+        raise Refusal(5, "pages/x.md: not valid UTF-8")
+
+    monkeypatch.setitem(HANDLERS, "properties", refuse)
+    assert main(["properties"]) == 5
+    assert "pages/x.md: not valid UTF-8" in capsys.readouterr().err

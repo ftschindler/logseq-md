@@ -1,0 +1,2 @@
+﻿- a byte order mark starts this file
+	- and is kept

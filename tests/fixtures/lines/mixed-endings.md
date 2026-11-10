@@ -1,0 +1,4 @@
+- one ending per line
+	- this one is unix
+	- this one is windows
+	- and this one is old mac- last line has none

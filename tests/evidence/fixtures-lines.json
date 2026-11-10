@@ -1,0 +1,74 @@
+{
+  "files": [
+    {
+      "path": "tests/fixtures/lines/blank-only-no-final-newline.md",
+      "sha256": "1ffcd655a50c0e1fe0b80c5f38d947fc3b8f25d271bf862b1b0ef644bb312ec0"
+    },
+    {
+      "path": "tests/fixtures/lines/blank-only.md",
+      "sha256": "8fd098bee6dd75e20e58e13790ad9cc27a255f34870aebde175bac05c9b87d37"
+    },
+    {
+      "path": "tests/fixtures/lines/bom.md",
+      "sha256": "e211a1f952e2e70e1078a087d3eca9d7c1268bf97428aa24d3dc21a79a35bc1b"
+    },
+    {
+      "path": "tests/fixtures/lines/crlf-no-final-newline.md",
+      "sha256": "92b43571d43411b73212d70d3fb724a7adfc049be9f7d85f879cb120806f8676"
+    },
+    {
+      "path": "tests/fixtures/lines/crlf.md",
+      "sha256": "7f12278614817ddb48fa25d0a0c6b2d2b5331a77d5213715963641b153577a11"
+    },
+    {
+      "path": "tests/fixtures/lines/empty.md",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "tests/fixtures/lines/final-newline.md",
+      "sha256": "494a2731b6baa009570269d5e5660c790d8800dfa064fc8e486f138edea9fb28"
+    },
+    {
+      "path": "tests/fixtures/lines/front-matter.md",
+      "sha256": "00cbc3a72c2a4c67b3eac6da8bc12230a66bfba277670a0e3550a89b0e36e6dc"
+    },
+    {
+      "path": "tests/fixtures/lines/lone-cr.md",
+      "sha256": "102e0a309e1e72cc4d363b669e68bf2ba5b8d5b69b5e2d7041c0fa9a19e09a86"
+    },
+    {
+      "path": "tests/fixtures/lines/mixed-endings.md",
+      "sha256": "36f95c822ded2b9b2473747f8212cbd4706aa94226fce717a8e385780a66ec5f"
+    },
+    {
+      "path": "tests/fixtures/lines/mixed-prefix.md",
+      "sha256": "a98c8b65de7aa30ca11a6d68c29504a25d5742ef62b581e5173efb310b679ddf"
+    },
+    {
+      "path": "tests/fixtures/lines/no-final-newline.md",
+      "sha256": "02abcd16d869813e618674f7b33b820e66b83dbb9f64dafe54610d5bb60adb34"
+    },
+    {
+      "path": "tests/fixtures/lines/not-utf8.md",
+      "sha256": "57601e178ef5e737f21987983f60e49fec690fa0400f588b2216062ab0ff3b1e"
+    },
+    {
+      "path": "tests/fixtures/lines/spaces-only.md",
+      "sha256": "a2607a023a33f0e7edb7a1c36e580643630780897df4f861ef1ee06ed3a26f00"
+    },
+    {
+      "path": "tests/fixtures/lines/tabs-only.md",
+      "sha256": "677c6b7c98a9f76bf2079d1ec3d5aeec4d9d088c3ee9dc8a9225b2877ffbd69d"
+    },
+    {
+      "path": "tests/fixtures/lines/whitespace-lines.md",
+      "sha256": "7395d6c8fb4f06fe99e7c234b610da301ed5b81ecb2ca82e51c6d248af64e316"
+    }
+  ],
+  "graph_files_scanned": 2168,
+  "outcome": "pass",
+  "recorded_at": "2026-11-10T14:13:21Z",
+  "schema_version": 1,
+  "script_sha256": "399507a95e1f3d49f23ff2e22b5fee8c4f5f95597457b4eb98ae0521c93689d3",
+  "topic": "lines"
+}
