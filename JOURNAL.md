@@ -25,3 +25,30 @@ examples, never its text.
 **Surprise.** The first leak check failed on `front-matter.md`: its `---` delimiter lines occur
 in the graph as horizontal rules. A run of dashes is structure, so `---` joined the leak
 check's structure list rather than the fixture being changed.
+
+## 2026-11-11 - S2: the parser comparison on the maintainer's graph
+
+`uv run --script .scripts/survey_graph.py <graph>` over 963 files, now with a section comparing
+the survey's own counts with `blocks.py`'s, construct by construct: 22,276 bullets, 2,608 block
+property lines, 232 page-level ones, 191 fences, 373 scheduling lines, 28 drawers, 11,806
+references, every marker and a maximum depth of 9. All agree.
+
+**Surprise: the survey and the design meant different things by "after properties".** The first
+comparison put 1,374 wrapped lines inside the content span where the parser put 1,373, and 0
+outside it where the parser put 76. The survey only closed the span on a property, while
+[DESIGN.md §7](DESIGN.md#the-five-writes) closes it on a property, a drawer or a scheduling
+line; and it reopened the span after a `DEADLINE:`. The survey was wrong and now follows the
+design. `wrapped.md` carries a line after a property and one after a `DEADLINE:`.
+
+**Surprise: the survey's depth was an indent level, not a depth.** It agreed on the real graph,
+but the synthetic graph in the tests has a bullet indented two tabs under a one-tab parent, which
+the survey called depth 4 and the parser depth 3. The parser nests a bullet under the nearest
+earlier bullet indented less, so a jump of two levels is one level of nesting; the survey now
+counts the same way, independently. `indent-jump.md` is the fixture.
+
+**Surprise: the leak check flagged structure.** `:LOGBOOK:` and a bulleted fence marker such as
+`- ```python` occur in any graph that has tasks or code. Both joined the leak check's structure
+list, a structure line with a bullet in front now counts as structure, and the `lines` evidence
+was re-recorded for the changed script. A fixture line using Logseq's own
+`logseq.order-list-type:: number` matched too and was replaced by an invented dotted key rather
+than widening the list to property lines.

@@ -1,0 +1,78 @@
+{
+  "files": [
+    {
+      "path": "tests/fixtures/blocks/blank-lines.md",
+      "sha256": "f0be5e1575f078a745d4028587fb56acad7d63d9a56e25dae50113f04e7f384f"
+    },
+    {
+      "path": "tests/fixtures/blocks/continuation-orders.md",
+      "sha256": "e16cb0f9f55ce6ed6b5a3477421fe3887eb196ab98ba7ffc4ca521e8c7e6a4ac"
+    },
+    {
+      "path": "tests/fixtures/blocks/crlf.md",
+      "sha256": "4cb7aaca6c6b50d1c32a684669b0d6689de9e8451046c1219e2e8441b7d68f85"
+    },
+    {
+      "path": "tests/fixtures/blocks/fences.md",
+      "sha256": "f76038cdaa15a271406ee5c692d2062d5bea6c3689294465b8b973d56988f75e"
+    },
+    {
+      "path": "tests/fixtures/blocks/indent-jump.md",
+      "sha256": "1ac1b6d3739d1e505c4723be60a00bc4b352fb262b15dd5b2b36ab314bb51d89"
+    },
+    {
+      "path": "tests/fixtures/blocks/mixed-prefix.md",
+      "sha256": "f276e14eeef775e8494783dd2abe554c2fd3eb95a805ab18bb30cd6e330d4439"
+    },
+    {
+      "path": "tests/fixtures/blocks/page-properties-only.md",
+      "sha256": "c02bfa9a9c346c1a53a9ec41ddc214ba256adfb794cc4b8c67ed6fb87995e575"
+    },
+    {
+      "path": "tests/fixtures/blocks/page-properties-then-outline.md",
+      "sha256": "15a33408d81ff540153abfcb9512e64bb383cda4a131d5fc81b5a105a1f70ebd"
+    },
+    {
+      "path": "tests/fixtures/blocks/properties-and-prose.md",
+      "sha256": "fabba55dee6e465de6b0370f1b7673565e7bbc08b7dbbc49746af3a745abf10b"
+    },
+    {
+      "path": "tests/fixtures/blocks/properties.md",
+      "sha256": "2abe80bf051ffdaaf88290166cf8fe3326bdfe426799538b0fdb92e4c63e7971"
+    },
+    {
+      "path": "tests/fixtures/blocks/prose-only.md",
+      "sha256": "1dd81a83bc466e17d363b7f0e2525b10ea94c5dd370405ea1741d270023a9243"
+    },
+    {
+      "path": "tests/fixtures/blocks/references.md",
+      "sha256": "1ef8d4b0cd936fd5e0ea8e94183188479cce34b32aefc5df1d6c489f9607fdc5"
+    },
+    {
+      "path": "tests/fixtures/blocks/spaces.md",
+      "sha256": "9f931bf599356195d54533be1ac0b398e71d6c8c0c4a9b5c3811de3b4d869c66"
+    },
+    {
+      "path": "tests/fixtures/blocks/tabs-nine-deep.md",
+      "sha256": "d24b1dd289e83b651c0e3ebc3ae7c752ec3f9eaa9adac037f871be664053ca44"
+    },
+    {
+      "path": "tests/fixtures/blocks/tasks.md",
+      "sha256": "c07987c49bb4407c41242b7ca48578e378912d27db900f16fdac8c89e9ea9a97"
+    },
+    {
+      "path": "tests/fixtures/blocks/unclosed-fence.md",
+      "sha256": "3ece9b0885406728778319d3f6b56ee68de5109ac3d3646c8eea5460781413b5"
+    },
+    {
+      "path": "tests/fixtures/blocks/wrapped.md",
+      "sha256": "4577397187a47bddddb481e6a997657258be7e656533b75c04ca8497c852dca3"
+    }
+  ],
+  "graph_files_scanned": 2196,
+  "outcome": "pass",
+  "recorded_at": "2026-11-11T21:41:24Z",
+  "schema_version": 1,
+  "script_sha256": "83f23c82b9e8f0973c183b485fe0fb31d926d55013c5fa942d91ee0a1e1d4234",
+  "topic": "blocks"
+}

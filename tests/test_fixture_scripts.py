@@ -98,13 +98,25 @@ class TestSurvey:
         assert result.clock_per_logbook == {1: 1}
         assert result.prefixes["TAB TAB SP SP"] == 1
 
+    def test_the_block_model_agrees_with_the_survey(self, graph: Path) -> None:
+        rows = dict(survey_graph.survey(graph).compare())
+        assert rows["bullets"] == "5 == 5"
+        assert rows["wrapped content lines (after the content span)"] == "0 == 0"
+        assert {key: row for key, row in rows.items() if " == " not in row} == {}
+
+    def test_a_disagreement_is_reported(self, graph: Path) -> None:
+        result = survey_graph.survey(graph)
+        result.parser["bullets"] += 1
+        assert dict(result.compare())["bullets"] == "5 != 6"
+
 
 class TestLeakCheck:
     @pytest.fixture
     def repo(self, tmp_path: Path) -> Path:
         root = tmp_path / "repo"
         write(
-            root / "tests" / "fixtures" / "topic" / "a.md", b"- an invented line\n\t- \n\t  id:: x\n```\n:END:\n---\n"
+            root / "tests" / "fixtures" / "topic" / "a.md",
+            b"- an invented line\n\t- \n\t  id:: x\n```\n- ```\n\t  :LOGBOOK:\n:END:\n---\n",
         )
         (root / ".scripts").mkdir(parents=True)
         shutil.copy(SCRIPTS / "check_fixture_leaks.py", root / ".scripts" / "check_fixture_leaks.py")

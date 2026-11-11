@@ -1,0 +1,5 @@
+- pottery wheel notes
+  - clay needs wedging first
+    - twenty kneads per side
+  - trim when leather hard
+- glaze shelf inventory
