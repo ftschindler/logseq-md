@@ -1,0 +1,2 @@
+- the kettle is descaled monthly
+	- vinegar works

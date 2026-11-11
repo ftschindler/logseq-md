@@ -158,6 +158,17 @@ repos:
     pass_filenames: false
     always_run: true
 
+  # Every fixture directory carries leak evidence that still describes it. The
+  # leak check needs a real graph and runs on a maintainer's machine; this is
+  # the offline half, and it runs on every commit because a fixture edited
+  # after its check is exactly the change nobody thinks to re-check.
+  - id: fixture-evidence
+    name: Fixture leak evidence matches the committed fixtures
+    entry: uv run --script .scripts/check_fixture_evidence.py
+    language: system
+    pass_filenames: false
+    always_run: true
+
   # No symlinks in the tree. A symlink is committed as a mode-120000 blob
   # holding a path, and a clone on Windows without developer mode writes that
   # path out as an ordinary text file: the link silently becomes a one-line

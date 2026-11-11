@@ -19,7 +19,7 @@ merged, and know what it owns, what it must not touch and what it hands on.
 ## Status
 
 - [x] **[S0](#s0---the-release-pipeline)** - The release pipeline
-- [ ] **[S1](#s1---lines-the-gate-the-fixture-tooling-and-the-cli-frame)** - Lines, the gate, the fixture tooling, and the CLI frame
+- [x] **[S1](#s1---lines-the-gate-the-fixture-tooling-and-the-cli-frame)** - Lines, the gate, the fixture tooling, and the CLI frame
 - [ ] **[S2](#s2---blocks)** - Blocks
 - [ ] **[S3](#s3---graphs-config-and-names)** - Graphs, config and names
 - [ ] **[S4](#s4---identity-and-targets)** - Identity and targets

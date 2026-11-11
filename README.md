@@ -13,8 +13,9 @@ uvx logseq-md --help
 
 That needs no install beyond [uv](https://docs.astral.sh/uv/).
 
-**Pre-alpha.** The packaging, the entry point and the guard suite are in place. Nothing reads a
-graph yet.
+**Pre-alpha.** Every verb is registered and answers `--help`, and none is implemented yet: each
+exits 2 saying so. Underneath, a file is held as lines that write back to the identical bytes,
+which the round-trip gate checks over every fixture on Linux and Windows.
 
 ## What this is for
 
