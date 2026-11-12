@@ -9,11 +9,13 @@ run in parallel without colliding in this file.
 from __future__ import annotations
 
 import argparse
+import json
 import sys
 from collections.abc import Callable, Sequence
 
-from logseq_md import __version__
+from logseq_md import __version__, enumeration, output, policy
 from logseq_md.exits import BAD_ARGUMENTS, OK, Refusal
+from logseq_md.graph import open_graph
 
 Handler = Callable[[argparse.Namespace], int]
 
@@ -74,6 +76,10 @@ def build_parser() -> argparse.ArgumentParser:  # noqa: PLR0915 - one registrati
         _READ_ONLY,
         "logseq-md blocks --graph ~/notes --marker TODO --tag planning",
     )
+    blocks.epilog = (
+        f"{blocks.epilog}\n\n--since and --until select journals by their date; a page has no date, so either\n"
+        "flag leaves pages out.\n\n" + output.BLOCKS_JSON
+    )
     _graph(blocks)
     blocks.add_argument("--marker", metavar="MARKER", help="only blocks whose marker is MARKER")
     blocks.add_argument("--tag", metavar="TAG", help="only blocks tagged with or linking to TAG")
@@ -113,6 +119,7 @@ def build_parser() -> argparse.ArgumentParser:  # noqa: PLR0915 - one registrati
         _READ_ONLY,
         "logseq-md pages --graph ~/notes",
     )
+    pages.epilog = f"{pages.epilog}\n\n{output.PAGES_JSON}"
     _graph(pages)
     _shape(pages)
 
@@ -194,6 +201,39 @@ def build_parser() -> argparse.ArgumentParser:  # noqa: PLR0915 - one registrati
     return parser
 
 
+def _shape_of(args: argparse.Namespace) -> str:
+    return "json" if args.json else "paths" if getattr(args, "paths", False) else "text"
+
+
+def _blocks(args: argparse.Namespace) -> int:
+    filters = enumeration.Filters(
+        marker=enumeration.parse_marker(args.marker),
+        tag=args.tag,
+        has_property=args.has_property,
+        since=enumeration.parse_date("--since", args.since),
+        until=enumeration.parse_date("--until", args.until),
+        page=args.page,
+    )
+    graph = open_graph(args.graph)
+    hits = enumeration.find(graph, filters)
+    output.emit_blocks(graph, hits, _shape_of(args), output.options(args.children, args.raw, args.keep), sys.stdout)
+    return OK
+
+
+def _pages(args: argparse.Namespace) -> int:
+    graph = open_graph(args.graph)
+    output.emit_pages(graph, list(enumeration.pages(graph)), _shape_of(args), sys.stdout)
+    return OK
+
+
+def _properties(args: argparse.Namespace) -> int:
+    if args.json:
+        print(json.dumps({"dropped": list(policy.DROPPED)}))
+    else:
+        print("\n".join(policy.DROPPED))
+    return OK
+
+
 def _not_implemented(args: argparse.Namespace) -> int:
     print(f"logseq-md {args.verb}: not implemented yet", file=sys.stderr)
     return BAD_ARGUMENTS
@@ -201,11 +241,11 @@ def _not_implemented(args: argparse.Namespace) -> int:
 
 #: Verb name to handler. A later stage replaces one entry and nothing else.
 HANDLERS: dict[str, Handler] = {
-    "blocks": _not_implemented,
+    "blocks": _blocks,
     "show": _not_implemented,
     "backlinks": _not_implemented,
-    "pages": _not_implemented,
-    "properties": _not_implemented,
+    "pages": _pages,
+    "properties": _properties,
     "ensure-id": _not_implemented,
     "set-property": _not_implemented,
     "append-child": _not_implemented,

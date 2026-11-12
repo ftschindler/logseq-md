@@ -1,0 +1,34 @@
+{
+  "files": [
+    {
+      "path": "tests/fixtures/enumeration/graph/journals/2025_01_10.md",
+      "sha256": "9538325ff880678f9fb0597004d7e78d0f9bd55b485bc40d235abdee3038e042"
+    },
+    {
+      "path": "tests/fixtures/enumeration/graph/journals/2025_02_14.md",
+      "sha256": "5256cbf56bbdfc8a4efe782879be4a7bee9e93280408ea06f1db4120cf0fb5c1"
+    },
+    {
+      "path": "tests/fixtures/enumeration/graph/journals/2025_03_20.md",
+      "sha256": "f6b955d5e9f1accc3878188c17b6c4995ca453b56554771681b2fe4aa17ce329"
+    },
+    {
+      "path": "tests/fixtures/enumeration/graph/logseq/config.edn",
+      "sha256": "1faa4161fedb3880d81c5805dc331b5157fe437d7837c66f5ce92c26c9695cac"
+    },
+    {
+      "path": "tests/fixtures/enumeration/graph/pages/Pottery Studio.md",
+      "sha256": "7f5ed492a332fdf95bdc32f2e2def41a9b1106445cc5e945e5a2194ee5a9a0d9"
+    },
+    {
+      "path": "tests/fixtures/enumeration/graph/pages/Slab Roller.md",
+      "sha256": "1764481b906d804ee308f936045bcc1e6f0ae40fdab02a06ca63d15c2378337e"
+    }
+  ],
+  "graph_files_scanned": 2200,
+  "outcome": "pass",
+  "recorded_at": "2026-11-12T10:20:44Z",
+  "schema_version": 1,
+  "script_sha256": "83f23c82b9e8f0973c183b485fe0fb31d926d55013c5fa942d91ee0a1e1d4234",
+  "topic": "enumeration"
+}
