@@ -24,7 +24,7 @@ merged, and know what it owns, what it must not touch and what it hands on.
 - [x] **[S3](#s3---graphs-config-and-names)** - Graphs, config and names
 - [x] **[S4](#s4---identity-and-targets)** - Identity and targets
 - [x] **[S5](#s5---enumeration-blocks-pages-properties)** - Enumeration: `blocks`, `pages`, `properties`
-- [ ] **[S6](#s6---resolution-show-backlinks)** - Resolution: `show`, `backlinks`
+- [x] **[S6](#s6---resolution-show-backlinks)** - Resolution: `show`, `backlinks`
 - [ ] **[S7](#s7---the-splice-and-the-in-block-writes)** - The splice, and the in-block writes
 - [ ] **[S8](#s8---append-child-and---record-as)** - `append-child` and `--record-as`
 - [ ] **[S9](#s9---the-skill)** - The skill

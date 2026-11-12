@@ -13,7 +13,7 @@ import json
 import sys
 from collections.abc import Callable, Sequence
 
-from logseq_md import __version__, enumeration, output, policy
+from logseq_md import __version__, enumeration, output, policy, resolution, targets
 from logseq_md.exits import BAD_ARGUMENTS, OK, Refusal
 from logseq_md.graph import open_graph
 
@@ -96,9 +96,15 @@ def build_parser() -> argparse.ArgumentParser:  # noqa: PLR0915 - one registrati
         _READ_ONLY,
         "logseq-md show --graph ~/notes 69676218-6ca0-4d45-8d0f-d229c8721922",
     )
+    show.epilog = (
+        f"{show.epilog}\n\nA page shows its top-level blocks, and its whole outline with --children.\n"
+        "Every reference is reported: resolved, dangling, ambiguous, or a cycle where it is met.\n\n" + output.SHOW_JSON
+    )
     _graph(show)
     show.add_argument("target", help="a uuid, a page name, a journal date or page:line")
-    show.add_argument("--depth", metavar="N", type=int, default=1, help="resolve references N levels deep")
+    show.add_argument(
+        "--depth", metavar="N", type=int, default=1, help="resolve references N levels deep (default 1, 0 for none)"
+    )
     _read_output(show)
 
     backlinks = _verb(
@@ -107,6 +113,10 @@ def build_parser() -> argparse.ArgumentParser:  # noqa: PLR0915 - one registrati
         "List every block that links to a page, each with its ancestors.",
         _READ_ONLY,
         'logseq-md backlinks --graph ~/notes "Bread Starter"',
+    )
+    backlinks.epilog = (
+        f"{backlinks.epilog}\n\nA link is [[page]], #page or #[[page]], compared as Logseq compares names.\n\n"
+        + output.BLOCKS_JSON
     )
     _graph(backlinks)
     backlinks.add_argument("page", help="the page name")
@@ -220,6 +230,41 @@ def _blocks(args: argparse.Namespace) -> int:
     return OK
 
 
+def _show(args: argparse.Namespace) -> int:
+    if args.depth < 0:
+        raise Refusal(BAD_ARGUMENTS, f"--depth {args.depth}: must be 0 or more")
+    graph = open_graph(args.graph)
+    target = targets.resolve(graph, args.target)
+    resolver = resolution.Resolver(graph)
+    opts = output.options(args.children, args.raw, args.keep)
+    page = target.page
+    shape = _shape_of(args)
+    if target.block is None:
+        shown = [page.blocks[root] for root in page.roots]
+        if args.children:
+            shown = list(page.blocks)
+        resolved = resolver.resolve(target.path, page.references, args.depth)
+        for block in shown:
+            resolved += resolver.resolve(target.path, block.references, args.depth, resolution.chain_of(block))
+        sys.stdout.write(output.show(graph, target, resolved, shape, opts))
+        return OK
+    shown = [page.blocks[target.block]]
+    if args.children:
+        shown += output.descendants(page, target.block)
+    resolved = ()
+    for block in shown:
+        resolved += resolver.resolve(target.path, block.references, args.depth, resolution.chain_of(block))
+    sys.stdout.write(output.show(graph, target, resolved, shape, opts))
+    return OK
+
+
+def _backlinks(args: argparse.Namespace) -> int:
+    graph = open_graph(args.graph)
+    hits = [output.Hit(path, page, block) for path, page, block in resolution.backlinks(graph, args.page)]
+    output.emit_blocks(graph, hits, _shape_of(args), output.options(args.children, args.raw, args.keep), sys.stdout)
+    return OK
+
+
 def _pages(args: argparse.Namespace) -> int:
     graph = open_graph(args.graph)
     output.emit_pages(graph, list(enumeration.pages(graph)), _shape_of(args), sys.stdout)
@@ -242,8 +287,8 @@ def _not_implemented(args: argparse.Namespace) -> int:
 #: Verb name to handler. A later stage replaces one entry and nothing else.
 HANDLERS: dict[str, Handler] = {
     "blocks": _blocks,
-    "show": _not_implemented,
-    "backlinks": _not_implemented,
+    "show": _show,
+    "backlinks": _backlinks,
     "pages": _pages,
     "properties": _properties,
     "ensure-id": _not_implemented,
