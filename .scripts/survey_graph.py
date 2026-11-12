@@ -20,7 +20,9 @@ graph"):
   against it rather than agree with it. Only the round-trip imports the line
   model, because the round-trip is the question of whether that model holds,
   and the parser comparison imports the block model, so that the two counts of
-  the same construct can disagree.
+  the same construct can disagree. The name check imports the graph model,
+  because whether a filename survives the trip to a page name and back is a
+  question about that model and nothing else.
 """
 
 from __future__ import annotations
@@ -34,6 +36,7 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO_ROOT / "src"))
 
 from logseq_md import blocks as block_model  # noqa: E402
+from logseq_md import graph as graph_model  # noqa: E402
 from logseq_md import lines as line_model  # noqa: E402
 from logseq_md.exits import Refusal  # noqa: E402
 
@@ -164,6 +167,8 @@ class Survey:
         self.clock_per_logbook: Counter[int] = Counter()
         self.round_trip_failures: Counter[str] = Counter()
         self.parser: Counter[str] = Counter()
+        self.names: Counter[str] = Counter()
+        self.name_failures: Counter[str] = Counter()
         self.unclassified: Counter[str] = Counter()
         self.top_level: Counter[str] = Counter()
         self.block_ids: set[bytes] = set()
@@ -530,6 +535,48 @@ class Survey:
         self.journal_format = match.group(1).decode() if match else "(not set)"
 
 
+def shape(stem: str) -> str:
+    """A filename as a shape: letters `a`, digits `9`, other text `u`, runs collapsed, punctuation kept."""
+    out: list[str] = []
+    for char in stem:
+        token = "9" if char.isdigit() else "a" if char.isascii() and char.isalpha() else char if char.isascii() else "u"
+        if not out or out[-1] != token or token not in "a9u":
+            out.append(token)
+    return "".join(out)
+
+
+def name_check(result: Survey, graph: Path) -> None:
+    """Every filename to a page name or a date and back, in memory, through the graph model."""
+    model = graph_model.Graph(graph, graph_model.read_config(graph))
+    result.names["config notes"] = len(model.config.notes)
+    for path in model.files():
+        if model.is_journal(path):
+            day = model.journal_date(path)
+            back = None if day is None else model.journal_path(day)
+            kind = "journal"
+        else:
+            back = model.page_path(model.page_name(path))
+            kind = "page"
+            stem = path.stem
+            for label, present in (
+                ("a ___ namespace separator", "___" in stem),
+                ("a single _", re.search(r"(?<!_)_(?!_)", stem) is not None),
+                ("a space", " " in stem),
+                ("a dot", "." in stem),
+                ("non-ASCII", not stem.isascii()),
+                ("an uppercase letter", any(c.isupper() for c in stem)),
+            ):
+                if present:
+                    result.names[f"page filenames with {label}"] += 1
+            for escape in re.findall(r"%[0-9A-Fa-f]{2}", stem):
+                result.names[f"page filenames escaping {escape.upper()}"] += 1
+        if back == path:
+            result.names[f"{kind} filenames that map back"] += 1
+        else:
+            result.names[f"{kind} filenames that do not"] += 1
+            result.name_failures[f"{kind}: {shape(path.stem)}"] += 1
+
+
 def survey(graph: Path) -> Survey:
     """Walk `pages/` and `journals/` and count what they hold."""
     result = Survey()
@@ -544,6 +591,7 @@ def survey(graph: Path) -> Survey:
             if path.is_file():
                 result.file(path, graph)
     result.config(graph)
+    name_check(result, graph)
     dangling = [ref for ref in result.block_refs if ref not in result.block_ids]
     result.counts["distinct ((uuid)) targets"] = len(result.block_refs)
     result.counts["dangling ((uuid)) targets"] = len(dangling)
@@ -576,6 +624,8 @@ def report(result: Survey) -> str:
     section("CLOCK lines per logbook", [(f"{n} CLOCK", c) for n, c in sorted(result.clock_per_logbook.items())])
     section("macros other than embed", result.macros.most_common())
     section("parser comparison (survey == blocks.py)", result.compare())
+    section("name check (filename -> page name or date -> filename)", sorted(result.names.items()))
+    section("name check failures, by shape", result.name_failures.most_common())
     section("round-trip failures (first differing line)", result.round_trip_failures.most_common())
     section("unclassified", result.unclassified.most_common())
     return "\n".join(out).lstrip("\n") + "\n"

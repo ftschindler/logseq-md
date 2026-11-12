@@ -1,0 +1,14 @@
+{;; :file/name-format :legacy  <- a comment, not a setting
+ :meta/version 1
+ :hidden ["/archive" "a string with :file/name-format :legacy inside"]
+ :ui/show-brackets? true
+ :default-templates {:journals ""}
+ :nested {:file/name-format :legacy
+          :journal/file-name-format "yyyy"}
+ :favorites #{"Garden" "Tools"}
+ #_ :file/name-format #_ :legacy
+ :quote "she said \"no: never\""
+ :char \:
+ :journal/page-title-format "EEEE, MMMM do 'of' yyyy"
+ :journal/file-name-format "yyyy-MM-dd"
+ :file/name-format :triple-lowbar}

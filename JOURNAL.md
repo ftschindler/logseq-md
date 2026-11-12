@@ -52,3 +52,25 @@ list, a structure line with a bullet in front now counts as structure, and the `
 was re-recorded for the changed script. A fixture line using Logseq's own
 `logseq.order-list-type:: number` matched too and was replaced by an invented dotted key rather
 than widening the list to property lines.
+
+## 2026-11-12 - S3: the name check on the maintainer's graph
+
+`uv run --script .scripts/survey_graph.py <graph>` over 963 files, now with a name check that
+maps every filename to a page name or a date and back through `graph.py`: 256 of 256 page
+filenames and 707 of 707 journal filenames map back, with no config note. The config is
+`:triple-lowbar` with a custom `:journal/page-title-format`. Of the page filenames, 65 carry a
+`___` namespace, 124 a single `_`, 9 a dot, 2 a space and 3 non-ASCII letters; none carries a
+`%` escape. `tests/fixtures/graphs/triple-lowbar/` still has a filename for every escaping rule
+Logseq 0.10 applies, since a graph with a colon in a page title would have them.
+
+**Surprise: the design said spaces become underscores.** They do not, in either format; Logseq
+keeps a space in the filename, and the real graph has two such files. [DESIGN.md
+§4](DESIGN.md#pages-journals-and-namespaces) now says so.
+
+**Surprise: a config without `:file/name-format` is not the current default.** Logseq reads a
+missing key as the legacy format, so only a config that cannot be read at all falls back to
+`:triple-lowbar`, and says so on stderr.
+
+**Surprise: the leak check flagged a lone `}`.** The closing brace of a fixture `config.edn`
+on its own line occurs in the graph's markdown. The brace moved onto the previous line rather
+than widening the structure list.

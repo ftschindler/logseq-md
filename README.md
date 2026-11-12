@@ -17,7 +17,10 @@ That needs no install beyond [uv](https://docs.astral.sh/uv/).
 exits 2 saying so. Underneath, a file is held as lines that write back to the identical bytes,
 which the round-trip gate checks over every fixture on Linux and Windows, and a page's lines
 parse into blocks: nesting, content spans, properties, markers, scheduling, drawers, code fences
-and references, kept alongside the lines rather than in their place.
+and references, kept alongside the lines rather than in their place. A graph is opened from
+`--graph` or `LOGSEQ_MD_GRAPH`, its `logseq/config.edn` is read for the filename and journal
+formats, and page names, filenames and journal dates convert into one another the way that
+config says.
 
 ## What this is for
 

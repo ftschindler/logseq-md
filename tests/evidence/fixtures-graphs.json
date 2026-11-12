@@ -1,0 +1,154 @@
+{
+  "files": [
+    {
+      "path": "tests/fixtures/graphs/awkward-config/journals/2024-12-31.md",
+      "sha256": "23872a6f56bf69f8fbbe13e714138ffa7a3787b1d6379644e128305574c36791"
+    },
+    {
+      "path": "tests/fixtures/graphs/awkward-config/logseq/config.edn",
+      "sha256": "a0a4f9b0d0b6258d9e9d30631c7c8d1c9f809056fafc205310bbdee69920b7b2"
+    },
+    {
+      "path": "tests/fixtures/graphs/awkward-config/pages/Garden___Tools.md",
+      "sha256": "eea82a03af0139ca490524309950f50d9d076e64ec1783003947f11eeb2283e4"
+    },
+    {
+      "path": "tests/fixtures/graphs/legacy/journals/2025_02_28.md",
+      "sha256": "3da5549b56ae13cbafeb5b660b6d9b455796b273c132016460471f0bc5e9ec99"
+    },
+    {
+      "path": "tests/fixtures/graphs/legacy/logseq/config.edn",
+      "sha256": "6fa3d033087f917a5c2402e12797725c2cde2f2673828370d7730592e4b210b6"
+    },
+    {
+      "path": "tests/fixtures/graphs/legacy/pages/Bucket %23 Nine.md",
+      "sha256": "2d78ef585fced84eb1153f3aaf601c9f5fc8e052518f12478307456b7d1ef2b6"
+    },
+    {
+      "path": "tests/fixtures/graphs/legacy/pages/Orchard%2FPruning.md",
+      "sha256": "80212583c2d4c61189abf24dafb06cb49848378b09e0e074a4c632b05dfb81ad"
+    },
+    {
+      "path": "tests/fixtures/graphs/legacy/pages/Ratio%3A Flour.md",
+      "sha256": "52b86a33d426bcec609e3327aef1b3063e940faf2d22ceafffdb0aaed33ee3e3"
+    },
+    {
+      "path": "tests/fixtures/graphs/legacy/pages/pear_grafting.md",
+      "sha256": "54019e1053ab8ee4d2f488699be4990f4d057e71b628af0580be2f89d803c7ef"
+    },
+    {
+      "path": "tests/fixtures/graphs/skipped/assets/ignored.md",
+      "sha256": "43b47fa322305bca583d3ab7f3a2cd4eed10a4518601184904cbcbb08e3899be"
+    },
+    {
+      "path": "tests/fixtures/graphs/skipped/draws/ignored.md",
+      "sha256": "1fee1f7b4235ce7ded3eb945f48aa3609327164c79bf607a243476fcd9c45fab"
+    },
+    {
+      "path": "tests/fixtures/graphs/skipped/logseq/bak/pages/kept/2024_01_01.md",
+      "sha256": "46c90461bc51476ee60bd6dc61f1b8061012d93baa988e7eba503a4e2fc910d8"
+    },
+    {
+      "path": "tests/fixtures/graphs/skipped/logseq/config.edn",
+      "sha256": "6c38755349160d530841367fc1b3db8caddd2be447d0cdb169b74dc69fac1f28"
+    },
+    {
+      "path": "tests/fixtures/graphs/skipped/pages/.hidden/secret.md",
+      "sha256": "b1c3711a8b0a31ad26cabcb04f131436e3de3a46bac051f678deaadc38f36fe3"
+    },
+    {
+      "path": "tests/fixtures/graphs/skipped/pages/kept.md",
+      "sha256": "c7b7d5926ece36508351efc5e73edbd1e2779934b8d11380919b63a2a62da569"
+    },
+    {
+      "path": "tests/fixtures/graphs/skipped/whiteboards/ignored.md",
+      "sha256": "466a4eef2403f8e8e19d2974a8d4337eb09b39f267518f0a597a85f76667ab91"
+    },
+    {
+      "path": "tests/fixtures/graphs/triple-lowbar/journals/2025_02_28.md",
+      "sha256": "ed59fbfbd680d7316da72121da81d388728bae52f72abdd0f062c2060c006d92"
+    },
+    {
+      "path": "tests/fixtures/graphs/triple-lowbar/logseq/config.edn",
+      "sha256": "16bab7cb81408302ee0382569706f59111d1f45f902ee26620e1bd1a1be9d14c"
+    },
+    {
+      "path": "tests/fixtures/graphs/triple-lowbar/pages/%2525 Margin.md",
+      "sha256": "58fda148c64f0893ed5f1682b6861ce9b7eaf1fed9a0276e62043e6f3439b5f9"
+    },
+    {
+      "path": "tests/fixtures/graphs/triple-lowbar/pages/%2Edotfile habit.md",
+      "sha256": "8367c94e5f9b5d665787d31f70203924b2bdf0221179b40f7bb55e621df78798"
+    },
+    {
+      "path": "tests/fixtures/graphs/triple-lowbar/pages/50% Rye.md",
+      "sha256": "aea3cb7647044eb4fc3bdaad5ad25834f3e237dded2fc065e40214e3796899ba"
+    },
+    {
+      "path": "tests/fixtures/graphs/triple-lowbar/pages/AUX___.md",
+      "sha256": "b96f845f6fe6ea682af736c29833f417aff1506140247d56e3e5b636f8c25c9a"
+    },
+    {
+      "path": "tests/fixtures/graphs/triple-lowbar/pages/Alpha%5F___Beta.md",
+      "sha256": "8bdf38417ad501bbd0baa4a0b2d24fe6a7c3f9bcb0410453db4d68bd5be15046"
+    },
+    {
+      "path": "tests/fixtures/graphs/triple-lowbar/pages/Bucket %23 Seven.md",
+      "sha256": "52629a4dda8491211252e0d7057271672719192c815f50195c5537a2a3fdb14a"
+    },
+    {
+      "path": "tests/fixtures/graphs/triple-lowbar/pages/Draft v1.___.md",
+      "sha256": "2ed6671346a319f1e99646ca2c4204b4c5099d29109faedc9d162774f037a71b"
+    },
+    {
+      "path": "tests/fixtures/graphs/triple-lowbar/pages/Gew\u00e4chshaus.md",
+      "sha256": "229411bc505719163d5768f9a1cc2cf526ffb58930e9fe02c89e4e6d265d3109"
+    },
+    {
+      "path": "tests/fixtures/graphs/triple-lowbar/pages/Hydrometer v2.3.md",
+      "sha256": "37c60f3063cbc0e7c04a1c97838fb660209b9e1dc4f5676f2729a6a6f6258069"
+    },
+    {
+      "path": "tests/fixtures/graphs/triple-lowbar/pages/Orchard___Pruning___Winter.md",
+      "sha256": "da24a706c513ba6f26ae21cf00b6cd1068a76e68c596df84f389f8f89b86f305"
+    },
+    {
+      "path": "tests/fixtures/graphs/triple-lowbar/pages/Ratio%3A Flour to Water.md",
+      "sha256": "b73578dbbb9c88733d5981e00c36bf0bea1a947caf2f508362fcb0432ee93745"
+    },
+    {
+      "path": "tests/fixtures/graphs/triple-lowbar/pages/Seed Trays.md",
+      "sha256": "fb876819880a50008d23eac62032033755f1395f071e1109036dbf98eec03b2f"
+    },
+    {
+      "path": "tests/fixtures/graphs/triple-lowbar/pages/Why%3F Not%2A.md",
+      "sha256": "b1cb7aaa8ef903c4da355106dca01f87ba99e92b73630b1f6df7b5528a0a7e44"
+    },
+    {
+      "path": "tests/fixtures/graphs/triple-lowbar/pages/pear_grafting.md",
+      "sha256": "b805460f7ee11936a1667dbe93b7d500b9c94237c685fb8c8555820586913283"
+    },
+    {
+      "path": "tests/fixtures/graphs/triple-lowbar/pages/snake%5F%5F%5Fcase.md",
+      "sha256": "1184053cc9ae17e2e42564a820590a45704cab3637e95cce1d33d7cd14ecbae8"
+    },
+    {
+      "path": "tests/fixtures/graphs/unreadable-config/journals/2024_06_01.md",
+      "sha256": "cbc437663276343ba2787ce40633136ed375bf1376780a3073400e127b940260"
+    },
+    {
+      "path": "tests/fixtures/graphs/unreadable-config/logseq/config.edn",
+      "sha256": "e19b8620d1442e5f72ee6bab27ed909145c5587a321fd4b99b6f756de8762cbd"
+    },
+    {
+      "path": "tests/fixtures/graphs/unreadable-config/pages/Garden___Tools.md",
+      "sha256": "e7773f3bea405432aabcb0f25489b3c801a0a1bc23f1530b3c43baae42115384"
+    }
+  ],
+  "graph_files_scanned": 2196,
+  "outcome": "pass",
+  "recorded_at": "2026-11-12T08:25:23Z",
+  "schema_version": 1,
+  "script_sha256": "83f23c82b9e8f0973c183b485fe0fb31d926d55013c5fa942d91ee0a1e1d4234",
+  "topic": "graphs"
+}
