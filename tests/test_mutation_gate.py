@@ -4,7 +4,9 @@ For every block in every fixture, plan one write of each kind, apply it, and
 assert that every byte outside the spliced line range is unchanged and that the
 page still parses to the same number of blocks. One of them, `ensure-id`, is
 committed to a temporary copy of the file, so the bytes asserted are the bytes
-on disk.
+on disk. `append-child`, with and without `--record-as`, is planned under every
+block and page, and must add lines and change nothing else, with every new
+child's prefix equal to its siblings'.
 """
 
 from __future__ import annotations
@@ -94,3 +96,35 @@ def test_ensure_id_on_disk_changes_only_the_new_line(path: Path, tmp_path: Path)
         assert written.startswith(original[:cut])
         assert written.endswith(original[cut:])
         assert written.count(MINTED.encode()) == original.count(MINTED.encode()) + 1
+
+
+@pytest.mark.parametrize("path", OUTLINES, ids=lambda path: path.relative_to(FIXTURES).as_posix())
+@pytest.mark.parametrize("record", [False, True], ids=["append-child", "record-as"])
+def test_an_append_inserts_lines_and_changes_nothing_else(path: Path, record: bool) -> None:
+    page = blocks.parse(read(path))
+    before = b"".join(line.text().encode() for line in page.document.lines)
+    for parent in [*page.blocks, None]:
+        if parent is None and record:
+            continue
+        options = {"child_id": MINTED, "record_as": "gate-key"} if record else {}
+        try:
+            edits = writes.plan_append_child(page, parent, "gate text\nwrapped", **options)
+        except Refusal:
+            continue
+        after = blocks.parse(splice.apply(page.document, edits))
+        added = {start + offset for start, size in _inserted(edits) for offset in range(size)}
+        kept = b"".join(line.text().encode() for i, line in enumerate(after.document.lines) if i not in added)
+        # The one byte change a splice may make: a last line without an ending gains one.
+        assert kept == before or (kept.rstrip(b"\r\n") == before and not before.endswith((b"\n", b"\r")))
+        if parent is not None and parent.children:
+            child = next(b for b in after.blocks if b.parent == parent.index and b.index > parent.children[-1])
+            assert child.prefix == page.blocks[parent.children[-1]].prefix
+
+
+def _inserted(edits: list[splice.Edit]) -> list[tuple[int, int]]:
+    """Each edit's new lines as (first index in the new document, count). Append edits replace nothing."""
+    out, shift = [], 0
+    for edit in sorted(edits, key=lambda edit: edit.start):
+        out.append((edit.start + shift, len(edit.texts)))
+        shift += len(edit.texts) - (edit.end - edit.start)
+    return out

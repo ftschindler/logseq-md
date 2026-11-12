@@ -14,7 +14,7 @@ import sys
 from collections.abc import Callable, Sequence
 
 from logseq_md import __version__, enumeration, identity, output, policy, resolution, targets, writes
-from logseq_md.exits import BAD_ARGUMENTS, OK, Refusal
+from logseq_md.exits import BAD_ARGUMENTS, OK, RECORD_GONE, Refusal
 from logseq_md.graph import open_graph
 
 Handler = Callable[[argparse.Namespace], int]
@@ -179,12 +179,25 @@ def build_parser() -> argparse.ArgumentParser:  # noqa: PLR0915 - one registrati
     append_child = _verb(
         verbs,
         "append-child",
-        "Add a block as the last child of a block.",
+        "Add a block as the last child of a block, or as the last block of a page or journal.",
         "Writes the new lines, and with --record-as one property on the parent; never a :LOGBOOK:.",
         'logseq-md append-child --graph ~/notes 69676218-6ca0-4d45-8d0f-d229c8721922 --text "checked"',
     )
     _graph(append_child)
-    append_child.add_argument("uuid", help="the parent block's id")
+    append_child.epilog = (
+        f"{append_child.epilog}\n"
+        '  logseq-md append-child --graph ~/notes 2026-11-12 --create --text "started the review"\n\n'
+        "The child goes after the parent's properties, drawers and existing children, indented\n"
+        "like its siblings, or as the file indents at that depth. Each line of a multi-line TEXT\n"
+        "becomes a wrapped line of the one new block.\n\n"
+        "--record-as KEY gives the child an id and sets the property KEY to that id on the parent,\n"
+        "in one write, and prints the id. When the parent already carries KEY, the recorded block's\n"
+        "content is replaced instead; when that block is gone, exit 4 names its id. Clearing KEY\n"
+        "on the parent starts again. KEY needs a block target, not a page.\n\n"
+        "--create makes the journal for a YYYY-MM-DD date when it has no file; without it, a\n"
+        "missing journal is exit 1."
+    )
+    append_child.add_argument("target", help="the parent: a block's id, a page name or a journal date")
     append_child.add_argument("--text", required=True, help="the new block's content")
     append_child.add_argument(
         "--record-as",
@@ -328,6 +341,35 @@ def _set_marker(args: argparse.Namespace) -> int:
     return OK
 
 
+def _append_child(args: argparse.Namespace) -> int:
+    graph = open_graph(args.graph)
+    where = writes.append_target(graph, args.target, create=args.create)
+    parent = None if where.parent is None else where.page.blocks[where.parent]
+    if args.record_as is None:
+        edits = writes.plan_append_child(where.page, parent, args.text)
+        writes.run_edits(where.path, where.page, edits, dry_run=args.dry_run, create=where.create)
+        return OK
+    writes.check_key(args.record_as)
+    if parent is None:
+        raise Refusal(BAD_ARGUMENTS, f"{args.target}: --record-as records on a block; give the parent block's id")
+    recorded = writes.carrying(parent, args.record_as)
+    if recorded is None:
+        child = identity.mint()
+        edits = writes.plan_append_child(where.page, parent, args.text, child_id=child, record_as=args.record_as)
+        writes.run_edits(where.path, where.page, edits, dry_run=args.dry_run)
+    else:
+        child = recorded.value.strip()
+        if not identity.UUID.fullmatch(child):
+            raise Refusal(BAD_ARGUMENTS, f"line {recorded.line + 1}: {args.record_as} does not hold a block id")
+        if child.lower() not in identity.scan(graph).found:
+            raise Refusal(RECORD_GONE, f"{child}: recorded as {args.record_as}, but no block carries this id")
+        target, block = writes.block_for_write(graph, child)
+        writes.run(target, writes.plan_set_content(target.page, block, args.text), dry_run=args.dry_run)
+    if not args.dry_run:
+        print(child)
+    return OK
+
+
 def _not_implemented(args: argparse.Namespace) -> int:
     print(f"logseq-md {args.verb}: not implemented yet", file=sys.stderr)
     return BAD_ARGUMENTS
@@ -342,7 +384,7 @@ HANDLERS: dict[str, Handler] = {
     "properties": _properties,
     "ensure-id": _ensure_id,
     "set-property": _set_property,
-    "append-child": _not_implemented,
+    "append-child": _append_child,
     "set-content": _set_content,
     "set-marker": _set_marker,
 }

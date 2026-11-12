@@ -120,6 +120,17 @@ class TestSurvey:
         assert not [key for key in checked if "OTHER BYTES" in key]
         assert {path: path.read_bytes() for path in graph.rglob("*") if path.is_file()} == before
 
+    def test_the_indentation_report_counts_each_extension_by_shape(self, graph: Path) -> None:
+        assert survey_graph.survey(graph).indentation == {"extended by TAB": 1, "extended by TAB SP SP": 1}
+
+    def test_the_append_check_plans_every_append_and_writes_nothing(self, graph: Path) -> None:
+        before = {path: path.read_bytes() for path in graph.rglob("*") if path.is_file()}
+        checked = survey_graph.survey(graph).append_check
+        assert checked["append-child: only inserted lines"] > 0
+        assert checked["--record-as: prefix matches the siblings'"] > 0
+        assert not [key for key in checked if "OTHER BYTES" in key or "DIFFERS" in key]
+        assert {path: path.read_bytes() for path in graph.rglob("*") if path.is_file()} == before
+
     def test_logbook_and_prefixes_are_shapes(self, graph: Path) -> None:
         result = survey_graph.survey(graph)
         assert result.clock_per_logbook == {1: 1}

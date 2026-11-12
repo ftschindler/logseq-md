@@ -13,7 +13,7 @@ import sys
 
 import pytest
 
-from logseq_md import __version__
+from logseq_md import __version__, cli
 from logseq_md.cli import HANDLERS, build_parser, main, placeholders
 from logseq_md.exits import BAD_ARGUMENTS, OK, Refusal
 
@@ -90,23 +90,11 @@ def test_every_verb_has_help_with_an_example(verb: str, capsys: pytest.CaptureFi
 def test_verbs_still_on_a_placeholder() -> None:
     # S10 asserts this is empty. Until then it names what is left, so a stage
     # that implements a verb has to say so here.
-    assert placeholders() == sorted(
-        set(VERBS)
-        - {
-            "blocks",
-            "pages",
-            "properties",
-            "show",
-            "backlinks",
-            "ensure-id",
-            "set-property",
-            "set-content",
-            "set-marker",
-        }
-    )
+    assert placeholders() == []
 
 
-def test_a_placeholder_exits_2(capsys: pytest.CaptureFixture[str]) -> None:
+def test_a_placeholder_exits_2(monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]) -> None:
+    monkeypatch.setitem(HANDLERS, "append-child", cli._not_implemented)
     assert main(["append-child", "x", "--text", "y"]) == BAD_ARGUMENTS
     assert "not implemented yet" in capsys.readouterr().err
 

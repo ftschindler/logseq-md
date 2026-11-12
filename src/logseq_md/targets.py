@@ -46,7 +46,7 @@ def resolve(graph: Graph, text: str, *, write: bool = False) -> Target:
     text = text.strip()
     if identity.UUID.fullmatch(text):
         return _by_id(graph, text.lower())
-    day = _iso_date(text)
+    day = iso_date(text)
     if day is not None:
         path = graph.journal_path(day)
         if not path.is_file():
@@ -67,7 +67,7 @@ def resolve(graph: Graph, text: str, *, write: bool = False) -> Target:
     return Target(path, blocks.parse(lines.read(path)), None)
 
 
-def _iso_date(text: str) -> date | None:
+def iso_date(text: str) -> date | None:
     match = _DATE.fullmatch(text)
     if not match:
         return None

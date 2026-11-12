@@ -1,0 +1,46 @@
+{
+  "files": [
+    {
+      "path": "tests/fixtures/insertion/graph/journals/2032_05_03.md",
+      "sha256": "3c641fb40971126a67fb554ff7bec0622804472a4ff099501ec94918e9c83e93"
+    },
+    {
+      "path": "tests/fixtures/insertion/graph/logseq/config.edn",
+      "sha256": "1faa4161fedb3880d81c5805dc331b5157fe437d7837c66f5ce92c26c9695cac"
+    },
+    {
+      "path": "tests/fixtures/insertion/graph/pages/Bench Notes.md",
+      "sha256": "44a85c20d26761b7c5e407a93857510babb664db7461da8d9b386b17b246c5cc"
+    },
+    {
+      "path": "tests/fixtures/insertion/graph/pages/Empty.md",
+      "sha256": "75a11da44c802486bc6f65640aa48a730f0f684c5c07a42ba3cd1735eb3fb070"
+    },
+    {
+      "path": "tests/fixtures/insertion/graph/pages/Garden Plan.md",
+      "sha256": "e3ab599f26ac7db02c28d27f5caece7fcad5b744926526e08bcca11b5a4c6b6a"
+    },
+    {
+      "path": "tests/fixtures/insertion/graph/pages/Pantry.md",
+      "sha256": "6033371993a9015eb2c0624855043e51538fc54c748197d6457c76f412398995"
+    },
+    {
+      "path": "tests/fixtures/insertion/graph/pages/Reading List.md",
+      "sha256": "0d54abb73d87ab71bf54cfe1429efc24db3b840ce1d9cc5759bf5e1fd64699d2"
+    },
+    {
+      "path": "tests/fixtures/insertion/graph/pages/Review.md",
+      "sha256": "4bcaf370728bc917b56c0fe4e51b546879f01884ab2966ed3df81821401047ca"
+    },
+    {
+      "path": "tests/fixtures/insertion/graph/pages/Workshop.md",
+      "sha256": "c565e6787fb48b58d551fb81985707464d2cd43da27256ab6107f73cf041f1e7"
+    }
+  ],
+  "graph_files_scanned": 2200,
+  "outcome": "pass",
+  "recorded_at": "2026-11-12T21:51:39Z",
+  "schema_version": 1,
+  "script_sha256": "83f23c82b9e8f0973c183b485fe0fb31d926d55013c5fa942d91ee0a1e1d4234",
+  "topic": "insertion"
+}
