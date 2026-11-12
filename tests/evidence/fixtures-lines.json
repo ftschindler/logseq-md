@@ -65,10 +65,10 @@
       "sha256": "7395d6c8fb4f06fe99e7c234b610da301ed5b81ecb2ca82e51c6d248af64e316"
     }
   ],
-  "graph_files_scanned": 2168,
+  "graph_files_scanned": 2196,
   "outcome": "pass",
-  "recorded_at": "2026-11-10T14:13:21Z",
+  "recorded_at": "2026-11-11T21:41:24Z",
   "schema_version": 1,
-  "script_sha256": "399507a95e1f3d49f23ff2e22b5fee8c4f5f95597457b4eb98ae0521c93689d3",
+  "script_sha256": "83f23c82b9e8f0973c183b485fe0fb31d926d55013c5fa942d91ee0a1e1d4234",
   "topic": "lines"
 }

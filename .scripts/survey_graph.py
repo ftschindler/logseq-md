@@ -18,7 +18,9 @@ graph"):
   prefix is printed as tokens such as `TAB SP SP`, never as the line.
 - Its counting is independent of `src/`, so a later stage can check its parser
   against it rather than agree with it. Only the round-trip imports the line
-  model, because the round-trip is the question of whether that model holds.
+  model, because the round-trip is the question of whether that model holds,
+  and the parser comparison imports the block model, so that the two counts of
+  the same construct can disagree.
 """
 
 from __future__ import annotations
@@ -31,6 +33,7 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO_ROOT / "src"))
 
+from logseq_md import blocks as block_model  # noqa: E402
 from logseq_md import lines as line_model  # noqa: E402
 from logseq_md.exits import Refusal  # noqa: E402
 
@@ -160,6 +163,7 @@ class Survey:
         self.macros: Counter[str] = Counter()
         self.clock_per_logbook: Counter[int] = Counter()
         self.round_trip_failures: Counter[str] = Counter()
+        self.parser: Counter[str] = Counter()
         self.unclassified: Counter[str] = Counter()
         self.top_level: Counter[str] = Counter()
         self.block_ids: set[bytes] = set()
@@ -195,6 +199,7 @@ class Survey:
             count[key] += 1
 
         self.round_trip(data, relative)
+        self.parse(data, relative)
 
         try:
             data.decode("utf-8")
@@ -245,6 +250,91 @@ class Survey:
                 return
         self.round_trip_failures[f"line count {len(original)} -> {len(written)}"] += 1
 
+    def parse(self, data: bytes, relative: Path) -> None:  # noqa: PLR0912 - one counter per construct
+        """Count with the block model what `structure` counts on its own, for `compare`."""
+        try:
+            page = block_model.parse(line_model.parse(data, name=str(relative)))
+        except Refusal:
+            return
+        count = self.parser
+        lines = page.document.lines
+        fenced = page.fenced
+        count["bullets"] += len(page.blocks)
+        count["page-level property lines"] += len(page.page_properties)
+        count["code fences"] += len(page.fences)
+        count["lines inside code fences"] += len(fenced) - len(page.fences)
+        for fence in page.fences:
+            for number in list(fence)[1:]:
+                rest = lines[number].content
+                if BULLET.match(rest.encode()):
+                    count["fenced lines that look like bullets"] += 1
+        if not page.outline and any(line.content for line in lines):
+            if page.page_properties and all(
+                kind is block_model.Kind.PAGE_PROPERTY or not lines[n].content
+                for n, kind in enumerate(page.preamble_kinds)
+            ):
+                count["pages with no bullets: page properties only"] += 1
+            elif not page.page_properties:
+                count["pages with no bullets: prose only"] += 1
+            else:
+                count["pages with no bullets: properties and prose"] += 1
+        references = [*page.references]
+        for block in page.blocks:
+            references += block.references
+            count["maximum nesting depth"] = max(count["maximum nesting depth"], block.depth)
+            if block.marker:
+                count[f"marker {block.marker}"] += 1
+            for prop in block.properties:
+                conventional = lines[prop.line].indent == block.prefix + "  "
+                count[f"property lines at {'the conventional' if conventional else 'a deviant'} indent"] += 1
+            for offset, kind in enumerate(block.kinds):
+                number = block.start + offset
+                content = lines[number].content
+                if kind is block_model.Kind.SCHEDULING:
+                    count[content.split(":", 1)[0] + ":"] += 1
+                elif kind is block_model.Kind.DRAWER and DRAWER_OPEN.match(content.encode()) and content != ":END:":
+                    count["drawers"] += 1
+                elif kind is block_model.Kind.CONTENT and content and number not in fenced:
+                    inside = number < block.content_end
+                    count["wrapped content lines" if inside else "wrapped content lines (after the content span)"] += 1
+        for reference in references:
+            count[f"references {reference.kind.value}"] += 1
+
+    def compare(self) -> list[tuple[str, object]]:
+        """Each construct as the survey counted it and as the block model did."""
+        mine = self.counts
+        derived = {
+            "bullets": mine["bullets"],
+            "page-level property lines": mine["page-level property lines"],
+            "code fences": sum(n for key, n in mine.items() if key.startswith("code fences ")),
+            "lines inside code fences": mine["lines inside code fences"],
+            "fenced lines that look like bullets": mine["fenced lines that look like bullets"],
+            "maximum nesting depth": self.max_depth,
+            "DEADLINE:": mine["DEADLINE:"],
+            "SCHEDULED:": mine["SCHEDULED:"],
+            "drawers": sum(self.drawers.values()),
+            "wrapped content lines": mine["wrapped content lines"],
+            "wrapped content lines (after the content span)": mine["wrapped content lines (after the content span)"],
+            "references page": mine["[[links]]"] - mine["#[[multi word tags]]"],
+            "references tag": mine["#tags"] + mine["#[[multi word tags]]"],
+            "references block": mine["((uuid)) references"],
+            "references embed": mine["{{embed ((uuid))}}"],
+        }
+        for key in (
+            "property lines at the conventional indent",
+            "property lines at a deviant indent",
+            "pages with no bullets: prose only",
+            "pages with no bullets: page properties only",
+            "pages with no bullets: properties and prose",
+            *(f"marker {marker}" for marker in block_model.MARKERS),
+        ):
+            derived[key] = mine[key]
+        rows: list[tuple[str, object]] = []
+        for key, survey in derived.items():
+            parser = self.parser[key]
+            rows.append((key, f"{survey} {'==' if survey == parser else '!='} {parser}"))
+        return rows
+
     def structure(self, lines: list[tuple[bytes, bytes]]) -> None:  # noqa: PLR0912, PLR0915
         # One pass over a file as a state machine (fence, drawer, current block).
         # Split up, the state would travel between functions and read worse.
@@ -259,7 +349,19 @@ class Survey:
         file_kinds: set[str] = set()
         order: list[str] = []
         content_after_property = False
-        last_was_property = False
+        span_closed = False
+
+        # The open ancestors' indent widths, a tab counting as two spaces. A bullet
+        # is a child of the nearest earlier bullet indented less than it, so an
+        # indent that jumps two levels nests one.
+        widths: list[int] = []
+
+        def nest(indent: bytes) -> None:
+            width = 2 * indent.count(b"\t") + indent.count(b" ")
+            while widths and widths[-1] >= width:
+                widths.pop()
+            widths.append(width)
+            self.max_depth = max(self.max_depth, len(widths))
 
         def close_block() -> None:
             nonlocal order
@@ -300,6 +402,8 @@ class Survey:
                 count[f"code fences {fence[:1].decode()}"] += 1
                 if BULLET.match(rest):
                     bullets += 1
+                    count["bullets"] += 1
+                    nest(indent)
                 continue
 
             if drawer is not None:
@@ -314,10 +418,10 @@ class Survey:
             if BULLET.match(rest):
                 close_block()
                 bullets += 1
+                count["bullets"] += 1
                 bullet_prefix = indent
                 self.prefixes[tokens(indent)] += 1
-                depth = indent.count(b"\t") + indent.count(b" ") // 2 + 1
-                self.max_depth = max(self.max_depth, depth)
+                nest(indent)
                 text = rest[1:].lstrip(b" \t")
                 for marker in MARKERS:
                     if text == marker.encode() or text.startswith(marker.encode() + b" "):
@@ -325,7 +429,7 @@ class Survey:
                         break
                 self.references(text)
                 content_after_property = False
-                last_was_property = False
+                span_closed = False
                 continue
 
             if not rest:
@@ -352,7 +456,7 @@ class Survey:
                         self.block_ids.add(prop.group(2).strip().lower())
                     if content_after_property:
                         count["property lines after wrapped content that followed a property"] += 1
-                last_was_property = True
+                    span_closed = True
                 continue
 
             drawer_open = DRAWER_OPEN.match(rest)
@@ -362,6 +466,7 @@ class Survey:
                 clocks = 0
                 if drawer == "LOGBOOK" and bullet_prefix is not None:
                     order.append(":LOGBOOK:")
+                span_closed = bullet_prefix is not None
                 continue
 
             for keyword in (b"DEADLINE:", b"SCHEDULED:"):
@@ -375,12 +480,13 @@ class Survey:
                     prose += 1
                     self.references(rest)
                     continue
-                count["wrapped content lines (after properties)" if last_was_property else "wrapped content lines"] += 1
-                if last_was_property:
+                count["wrapped content lines (after the content span)" if span_closed else "wrapped content lines"] += 1
+                if span_closed:
                     content_after_property = True
                 self.references(rest)
                 continue
-            last_was_property = False
+            # A scheduling line closes the content span, like a property or a drawer.
+            span_closed = bullet_prefix is not None
 
         close_block()
         if fence is not None:
@@ -469,6 +575,7 @@ def report(result: Survey) -> str:
     section("drawers", result.drawers.most_common())
     section("CLOCK lines per logbook", [(f"{n} CLOCK", c) for n, c in sorted(result.clock_per_logbook.items())])
     section("macros other than embed", result.macros.most_common())
+    section("parser comparison (survey == blocks.py)", result.compare())
     section("round-trip failures (first differing line)", result.round_trip_failures.most_common())
     section("unclassified", result.unclassified.most_common())
     return "\n".join(out).lstrip("\n") + "\n"

@@ -11,7 +11,8 @@ A fixture is written by somebody who has just read a private graph, which is how
 a real line ends up in one. This compares every line of every file under
 `tests/fixtures/<topic>/` with every line of every markdown file in the graph,
 and fails on any match that is more than structure: a bullet on its own, a `---` rule,
-whitespace, an `id::` or `collapsed::` line, a fence marker or `:END:`.
+whitespace, an `id::` or `collapsed::` line, a fence marker, `:LOGBOOK:` or `:END:`, each
+with or without a bullet in front.
 
 Lines are compared as bytes with surrounding whitespace removed, and once more
 with a leading bullet removed, so a line copied at a different depth or lifted
@@ -44,17 +45,16 @@ SCHEMA_VERSION = 1
 
 LINE_BREAK = re.compile(rb"\r\n|\n|\r")
 BULLET = re.compile(rb"^-[ \t]+")
-STRUCTURE = re.compile(rb"^(-|-{3,}|:END:|(`{3,}|~{3,})[\w+-]*|(id|collapsed)::.*)?$", re.IGNORECASE)
+STRUCTURE = re.compile(rb"^(-|-{3,}|:END:|:LOGBOOK:|(`{3,}|~{3,})[\w+-]*|(id|collapsed)::.*)?$", re.IGNORECASE)
 
 
 def normalised(line: bytes) -> list[bytes]:
     """The forms of a line worth comparing: stripped, and stripped of its bullet."""
     stripped = line.strip(b" \t\xef\xbb\xbf")
-    forms = [stripped]
     unbulleted = BULLET.sub(b"", stripped)
-    if unbulleted != stripped:
-        forms.append(unbulleted)
-    return [form for form in forms if not STRUCTURE.match(form)]
+    if STRUCTURE.match(unbulleted):
+        return []
+    return [stripped] if unbulleted == stripped else [stripped, unbulleted]
 
 
 def graph_lines(graph: Path) -> tuple[set[bytes], int]:

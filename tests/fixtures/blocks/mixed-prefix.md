@@ -1,0 +1,8 @@
+- mixed prefixes for the canoe trip
+	- paddles
+		- spare blade
+		  - shaped TAB TAB SP SP
+		    - shaped TAB TAB SP SP SP SP
+	  - shaped TAB SP SP
+			  - shaped TAB TAB TAB SP SP
+	- life jackets

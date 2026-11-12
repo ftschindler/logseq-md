@@ -1,0 +1,10 @@
+- level one of the lantern outline
+	- level two of the lantern outline
+		- level three of the lantern outline
+			- level four of the lantern outline
+				- level five of the lantern outline
+					- level six of the lantern outline
+						- level seven of the lantern outline
+							- level eight of the lantern outline
+								- level nine of the lantern outline
+- back at the lantern root
