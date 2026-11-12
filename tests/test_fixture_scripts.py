@@ -93,6 +93,19 @@ class TestSurvey:
         assert "ferns" not in printed
         assert "Knives" not in printed
 
+    def test_the_name_check_maps_filenames_back(self, graph: Path) -> None:
+        names = survey_graph.survey(graph).names
+        assert names["page filenames that map back"] == 3
+        assert names["journal filenames that map back"] == 1
+        assert names["page filenames with a ___ namespace separator"] == 1
+
+    def test_a_name_check_failure_is_reported_as_a_shape(self, graph: Path) -> None:
+        write(graph / "journals" / "Field Notes 7.md", b"- an entry\n")
+        result = survey_graph.survey(graph)
+        assert result.names["journal filenames that do not"] == 1
+        assert result.name_failures == {"journal: a a 9": 1}
+        assert "Field" not in survey_graph.report(result)
+
     def test_logbook_and_prefixes_are_shapes(self, graph: Path) -> None:
         result = survey_graph.survey(graph)
         assert result.clock_per_logbook == {1: 1}

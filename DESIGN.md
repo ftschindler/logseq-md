@@ -237,10 +237,13 @@ A page's filename is its title with `/` replaced, per `logseq/config.edn`:
 :file/name-format :triple-lowbar
 ```
 
-So `[[Cooking/Bread Starter]]` is `pages/Cooking___Bread_Starter.md`. Spaces
-become underscores. **The tool reads the graph's own `config.edn` for this** rather than
-assuming the current default, because the setting has changed across Logseq versions and a
-graph carries the one it was written under.
+So `[[Cooking/Bread Starter]]` is `pages/Cooking___Bread Starter.md`. Spaces stay spaces;
+the characters some filesystem refuses (`: * ? " < > | # \`) are percent-encoded, and so is an
+underscore that would make the separator ambiguous. A config without the key is an older
+graph, whose filenames use the legacy format: `%2F` for the slash, and a `.` read back as one.
+**The tool reads the graph's own `config.edn` for this** rather than assuming the current
+default, because the setting has changed across Logseq versions and a graph carries the one it
+was written under.
 
 EDN is Clojure's data format and Python has no reader for it in the standard library. Rather
 than take a dependency, the tool reads the two or three keys it needs with a narrow reader,
@@ -251,7 +254,8 @@ That is a deliberate trade. The alternative puts a parsing library into a projec
 claim is that no library gets to reformat a file, and
 [§11](#11-windows-linux-python) is why the dependency list stays empty.
 
-Journals are `journals/YYYY_MM_DD.md`, with the format in the same file.
+Journals are `journals/YYYY_MM_DD.md`, titled like `Feb 28th, 2025`, with both formats in the
+same file as `:journal/file-name-format` and `:journal/page-title-format`.
 
 ### What the tool does not read
 
