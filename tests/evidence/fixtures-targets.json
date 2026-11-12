@@ -1,0 +1,42 @@
+{
+  "files": [
+    {
+      "path": "tests/fixtures/targets/graph/journals/2025_02_28.md",
+      "sha256": "fca09ba52e22021e11e112e47b0446d167a0872145a5589ed8d789b0e5ce94ce"
+    },
+    {
+      "path": "tests/fixtures/targets/graph/journals/2025_03_01.md",
+      "sha256": "8b12fce059f4ce1bfc26e6fe008b8eec56be720b6f0197282c55d4e061c7a17c"
+    },
+    {
+      "path": "tests/fixtures/targets/graph/logseq/config.edn",
+      "sha256": "8ce09f192c9c9ff5200403123537719f884e5e60912e7189804e99e397081792"
+    },
+    {
+      "path": "tests/fixtures/targets/graph/pages/Compost Bins.md",
+      "sha256": "8b12fce059f4ce1bfc26e6fe008b8eec56be720b6f0197282c55d4e061c7a17c"
+    },
+    {
+      "path": "tests/fixtures/targets/graph/pages/Meeting%3A2.md",
+      "sha256": "200cc8ddcfc4765d6e2d74f8efb542e248825ad2e8afc5819992f03cd8144e67"
+    },
+    {
+      "path": "tests/fixtures/targets/graph/pages/Orchard%2FPruning.md",
+      "sha256": "803589f756c4ed31514dd1f1802b155c57dd67c223c9e27430506b365e67179e"
+    },
+    {
+      "path": "tests/fixtures/targets/graph/pages/Orchard___Pruning.md",
+      "sha256": "e0702b62da622074c989f91d619eea161cb6ad9c06ce34178ec5fb9be2c347c2"
+    },
+    {
+      "path": "tests/fixtures/targets/graph/pages/Seed Library.md",
+      "sha256": "e3572451c4433c48f985642503c267d041e6503d9bfc70977e6a1bef69fcf627"
+    }
+  ],
+  "graph_files_scanned": 2196,
+  "outcome": "pass",
+  "recorded_at": "2026-11-12T08:47:48Z",
+  "schema_version": 1,
+  "script_sha256": "83f23c82b9e8f0973c183b485fe0fb31d926d55013c5fa942d91ee0a1e1d4234",
+  "topic": "targets"
+}

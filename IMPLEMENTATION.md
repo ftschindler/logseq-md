@@ -22,7 +22,7 @@ merged, and know what it owns, what it must not touch and what it hands on.
 - [x] **[S1](#s1---lines-the-gate-the-fixture-tooling-and-the-cli-frame)** - Lines, the gate, the fixture tooling, and the CLI frame
 - [x] **[S2](#s2---blocks)** - Blocks
 - [x] **[S3](#s3---graphs-config-and-names)** - Graphs, config and names
-- [ ] **[S4](#s4---identity-and-targets)** - Identity and targets
+- [x] **[S4](#s4---identity-and-targets)** - Identity and targets
 - [ ] **[S5](#s5---enumeration-blocks-pages-properties)** - Enumeration: `blocks`, `pages`, `properties`
 - [ ] **[S6](#s6---resolution-show-backlinks)** - Resolution: `show`, `backlinks`
 - [ ] **[S7](#s7---the-splice-and-the-in-block-writes)** - The splice, and the in-block writes

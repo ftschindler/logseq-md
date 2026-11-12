@@ -20,7 +20,9 @@ parse into blocks: nesting, content spans, properties, markers, scheduling, draw
 and references, kept alongside the lines rather than in their place. A graph is opened from
 `--graph` or `LOGSEQ_MD_GRAPH`, its `logseq/config.edn` is read for the filename and journal
 formats, and page names, filenames and journal dates convert into one another the way that
-config says.
+config says. Every target form resolves to a block or a page: a uuid, a page name, a journal
+date and `page:line`. Ids are minted the way Logseq mints them, with the creation time in the
+first eight hex digits.
 
 ## What this is for
 

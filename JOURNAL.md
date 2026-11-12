@@ -74,3 +74,16 @@ missing key as the legacy format, so only a config that cannot be read at all fa
 **Surprise: the leak check flagged a lone `}`.** The closing brace of a fixture `config.edn`
 on its own line occurs in the graph's markdown. The brace moved onto the previous line rather
 than widening the structure list.
+
+## 2026-11-12 - S4: the id scan on the maintainer's graph
+
+`uv run --script .scripts/survey_graph.py <graph>` over 963 files, now timing the graph-wide id
+scan the resolver runs on every uuid target: **0.40 seconds** on this machine, finding 700
+distinct ids, 4 of them page-level and none carried by more than one block. Indexing every
+page name, which a page-name target needs, takes 0.04 seconds in a separate in-memory run, and
+no name is held by two files. Neither time calls for a cache, which [DESIGN.md
+§3](DESIGN.md#3-rules-of-the-build) rule 5 forbids anyway.
+
+**Surprise: the design left ambiguity open.** Neither a name two files hold nor an id two blocks
+carry had an answer. Both are now exit 2 listing every match, written into [DESIGN.md
+§10](DESIGN.md#targets) with the other target rules the maintainer settled for this stage.

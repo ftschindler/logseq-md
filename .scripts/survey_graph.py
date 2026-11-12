@@ -22,13 +22,15 @@ graph"):
   and the parser comparison imports the block model, so that the two counts of
   the same construct can disagree. The name check imports the graph model,
   because whether a filename survives the trip to a page name and back is a
-  question about that model and nothing else.
+  question about that model and nothing else. The id scan imports the identity
+  model, and only to time it and count what it finds.
 """
 
 from __future__ import annotations
 
 import re
 import sys
+import time
 from collections import Counter
 from pathlib import Path
 
@@ -37,6 +39,7 @@ sys.path.insert(0, str(REPO_ROOT / "src"))
 
 from logseq_md import blocks as block_model  # noqa: E402
 from logseq_md import graph as graph_model  # noqa: E402
+from logseq_md import identity as identity_model  # noqa: E402
 from logseq_md import lines as line_model  # noqa: E402
 from logseq_md.exits import Refusal  # noqa: E402
 
@@ -169,6 +172,7 @@ class Survey:
         self.parser: Counter[str] = Counter()
         self.names: Counter[str] = Counter()
         self.name_failures: Counter[str] = Counter()
+        self.id_scan: dict[str, object] = {}
         self.unclassified: Counter[str] = Counter()
         self.top_level: Counter[str] = Counter()
         self.block_ids: set[bytes] = set()
@@ -577,6 +581,21 @@ def name_check(result: Survey, graph: Path) -> None:
             result.name_failures[f"{kind}: {shape(path.stem)}"] += 1
 
 
+def id_scan(result: Survey, graph: Path) -> None:
+    """Time the graph-wide id scan the resolver runs per invocation, and count what it finds."""
+    model = graph_model.Graph(graph, graph_model.read_config(graph))
+    started = time.perf_counter()
+    try:
+        ids = identity_model.scan(model)
+    except Refusal as refusal:
+        result.id_scan["refused with exit"] = refusal.code
+        return
+    result.id_scan["seconds"] = f"{time.perf_counter() - started:.3f}"
+    result.id_scan["distinct ids"] = len(ids.found)
+    result.id_scan["ids on more than one block"] = len(ids.duplicates())
+    result.id_scan["page-level ids"] = sum(1 for where in ids.found.values() for w in where if w.block is None)
+
+
 def survey(graph: Path) -> Survey:
     """Walk `pages/` and `journals/` and count what they hold."""
     result = Survey()
@@ -592,6 +611,7 @@ def survey(graph: Path) -> Survey:
                 result.file(path, graph)
     result.config(graph)
     name_check(result, graph)
+    id_scan(result, graph)
     dangling = [ref for ref in result.block_refs if ref not in result.block_ids]
     result.counts["distinct ((uuid)) targets"] = len(result.block_refs)
     result.counts["dangling ((uuid)) targets"] = len(dangling)
@@ -626,6 +646,7 @@ def report(result: Survey) -> str:
     section("parser comparison (survey == blocks.py)", result.compare())
     section("name check (filename -> page name or date -> filename)", sorted(result.names.items()))
     section("name check failures, by shape", result.name_failures.most_common())
+    section("id scan (identity.scan, in memory)", list(result.id_scan.items()))
     section("round-trip failures (first differing line)", result.round_trip_failures.most_common())
     section("unclassified", result.unclassified.most_common())
     return "\n".join(out).lstrip("\n") + "\n"
