@@ -106,6 +106,12 @@ class TestSurvey:
         assert result.name_failures == {"journal: a a 9": 1}
         assert "Field" not in survey_graph.report(result)
 
+    def test_the_id_scan_counts_ids_and_duplicates(self, graph: Path) -> None:
+        write(graph / "pages" / "copy.md", b"- a copy\n  id:: 65a1b2c3-0000-4000-8000-000000000001\n")
+        scan = survey_graph.survey(graph).id_scan
+        assert (scan["distinct ids"], scan["ids on more than one block"]) == (1, 1)
+        assert float(str(scan["seconds"])) >= 0
+
     def test_logbook_and_prefixes_are_shapes(self, graph: Path) -> None:
         result = survey_graph.survey(graph)
         assert result.clock_per_logbook == {1: 1}

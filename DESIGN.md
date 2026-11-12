@@ -706,6 +706,18 @@ the page between two runs, which is the race ids exist to remove. It is convenie
 look at an unfamiliar graph and that is the whole of its value. Every write verb refuses it and
 names `ensure-id` as the way to get a handle that lasts.
 
+**How each form is written.** A uuid is compared without regard to case. A date is
+`YYYY-MM-DD`, and a journal's title as the config renders it, such as `Feb 28th, 2025`, is a
+page name like any other. In `page:line` the line counts from 1. A line inside a block's bullet,
+properties or drawer names that block, and a line before the first bullet names the page. A
+colon is legal in a page title, so the text is only read as `page:line` when the part before
+the last colon is an existing page.
+
+**An ambiguous target is refused, never guessed.** Two files can decode to one page name, and
+a block copied by hand outside Logseq carries its id twice. Either is exit 2, listing every
+file or `file:line` that matched, because answering from one of them would answer from a page
+the caller may not mean.
+
 ### Exit codes
 
 A code per refusal, so a caller branches on what happened rather than on English that is free to
