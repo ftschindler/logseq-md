@@ -1,0 +1,30 @@
+{
+  "files": [
+    {
+      "path": "tests/fixtures/resolution/graph/journals/2025_04_02.md",
+      "sha256": "169352e03fc7e81da400323e61b0593aa7ccea3816498a06de8fbaccca6809ce"
+    },
+    {
+      "path": "tests/fixtures/resolution/graph/logseq/config.edn",
+      "sha256": "1faa4161fedb3880d81c5805dc331b5157fe437d7837c66f5ce92c26c9695cac"
+    },
+    {
+      "path": "tests/fixtures/resolution/graph/pages/Apiary.md",
+      "sha256": "877658ce6650b8830cd375dc44f0d893cdc9c84f963b8a2fc1948ffb38b271a9"
+    },
+    {
+      "path": "tests/fixtures/resolution/graph/pages/Hive Notes.md",
+      "sha256": "d89d0cc85f1a439149c89b730bf03c0484807e67cec1515c1bf76ebee30c47db"
+    },
+    {
+      "path": "tests/fixtures/resolution/graph/pages/Wax Foundry.md",
+      "sha256": "4649af89d715b3db7fc80c0e91a7ca18197f911fd17d8f3a0eeea7dc324b4bb3"
+    }
+  ],
+  "graph_files_scanned": 2200,
+  "outcome": "pass",
+  "recorded_at": "2026-11-12T11:24:03Z",
+  "schema_version": 1,
+  "script_sha256": "83f23c82b9e8f0973c183b485fe0fb31d926d55013c5fa942d91ee0a1e1d4234",
+  "topic": "resolution"
+}

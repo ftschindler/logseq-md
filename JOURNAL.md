@@ -87,3 +87,19 @@ no name is held by two files. Neither time calls for a cache, which [DESIGN.md
 **Surprise: the design left ambiguity open.** Neither a name two files hold nor an id two blocks
 carry had an answer. Both are now exit 2 listing every match, written into [DESIGN.md
 §10](DESIGN.md#targets) with the other target rules the maintainer settled for this stage.
+
+## 2026-11-12 - S6: what the design left open about resolution
+
+No survey: this stage parses nothing new, and the references it resolves are the ones
+`blocks.py` already finds and S2 checked against the real graph.
+
+**Surprise: the design said nothing about a page link with no file.** Logseq creates a page on
+its first link, so `[[Some Page]]` with no file behind it is normal rather than broken. It is
+reported as dangling with the path it would have, and `backlinks` answers for such a page
+instead of refusing it. Only a name that no file holds and nothing links to is exit 1. Both are
+now in [DESIGN.md §6](DESIGN.md#resolution), with what `show` prints for a page.
+
+**Surprise: `--depth` and a cycle are two guards, not one.** The depth alone bounds every chain,
+so termination never depended on the cycle check; the check is what makes a cycle visible as a
+cycle rather than as the same two blocks repeated until the depth runs out. The fixture test
+runs `--depth 1000` on the cycle and expects exactly one `cycle` entry.

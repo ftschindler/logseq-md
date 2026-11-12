@@ -382,6 +382,15 @@ Resolution is reported, never silently substituted. A reference that does not re
 to be dangling rather than dropped, because a dangling reference in a synced graph usually means
 the other device has the block.
 
+A `[[Page]]` whose path holds no file is dangling too, and its path is still given: Logseq
+creates a page on its first link, so a caller may want to write there. An id two blocks carry
+is reported as ambiguous with both, as a target would be ([§10](#targets)).
+
+Showing a page shows its top-level blocks, and its whole outline with `--children`, the same
+rule as for a block. Backlinks answer for a page that only exists as a link, and refuse with
+exit 1 a name that no file holds and nothing links to, so a typo is not read as a page nobody
+links to.
+
 ### Properties in output
 
 `collapsed::` and the Excalidraw keys are dropped. `hl-page::`, `file-path::` and the rest of
