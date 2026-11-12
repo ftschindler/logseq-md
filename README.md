@@ -13,16 +13,19 @@ uvx logseq-md --help
 
 That needs no install beyond [uv](https://docs.astral.sh/uv/).
 
-**Pre-alpha.** Every verb is registered and answers `--help`, and none is implemented yet: each
-exits 2 saying so. Underneath, a file is held as lines that write back to the identical bytes,
-which the round-trip gate checks over every fixture on Linux and Windows, and a page's lines
-parse into blocks: nesting, content spans, properties, markers, scheduling, drawers, code fences
-and references, kept alongside the lines rather than in their place. A graph is opened from
-`--graph` or `LOGSEQ_MD_GRAPH`, its `logseq/config.edn` is read for the filename and journal
-formats, and page names, filenames and journal dates convert into one another the way that
-config says. Every target form resolves to a block or a page: a uuid, a page name, a journal
-date and `page:line`. Ids are minted the way Logseq mints them, with the creation time in the
-first eight hex digits.
+**Pre-alpha.** The read verbs work: `blocks` lists blocks by marker, tag, property, date and
+page, each with its ancestors; `show` prints one block or page with its references resolved;
+`backlinks` lists what links to a page; `pages` lists every page and journal; `properties`
+prints which keys read output drops. Four of the five writes work: `ensure-id`, `set-property`,
+`set-content` and `set-marker` splice the lines they change into the file, write it atomically,
+refuse with exit 3 if the file changed since it was read, and print a unified diff instead with
+`--dry-run`. `append-child` is registered and exits 2 saying it is not implemented yet.
+
+Underneath, a file is held as lines that write back to the identical bytes, which the round-trip
+gate checks over every fixture on Linux and Windows, and the mutation gate checks that a write
+changes no byte outside its own lines. A graph is opened from `--graph` or `LOGSEQ_MD_GRAPH`, and
+its `logseq/config.edn` is read for the filename and journal formats. Ids are minted the way
+Logseq mints them, with the creation time in the first eight hex digits.
 
 ## What this is for
 

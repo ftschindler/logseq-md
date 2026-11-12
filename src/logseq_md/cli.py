@@ -13,7 +13,7 @@ import json
 import sys
 from collections.abc import Callable, Sequence
 
-from logseq_md import __version__, enumeration, output, policy, resolution, targets
+from logseq_md import __version__, enumeration, identity, output, policy, resolution, targets, writes
 from logseq_md.exits import BAD_ARGUMENTS, OK, Refusal
 from logseq_md.graph import open_graph
 
@@ -150,7 +150,13 @@ def build_parser() -> argparse.ArgumentParser:  # noqa: PLR0915 - one registrati
         "logseq-md ensure-id --graph ~/notes 69676218-6ca0-4d45-8d0f-d229c8721922",
     )
     _graph(ensure_id)
-    ensure_id.add_argument("target", help="a uuid, a page name or a journal date")
+    ensure_id.epilog = (
+        f'{ensure_id.epilog}\n  logseq-md ensure-id --graph ~/notes "Bread Starter:4"\n\n'
+        "Prints the id either way. A new id:: goes immediately after the block's content,\n"
+        "indented like its other properties. page:line is accepted here, and only here, so a\n"
+        "block without an id can get one; every other write takes the id this prints."
+    )
+    ensure_id.add_argument("target", help="the block: a uuid, or page:line")
     _dry_run(ensure_id)
 
     set_property = _verb(
@@ -161,6 +167,10 @@ def build_parser() -> argparse.ArgumentParser:  # noqa: PLR0915 - one registrati
         "logseq-md set-property --graph ~/notes 69676218-6ca0-4d45-8d0f-d229c8721922 reviewed yes",
     )
     _graph(set_property)
+    set_property.epilog = (
+        f"{set_property.epilog}\n\nA line already carrying KEY gets the new value in place; otherwise the line\n"
+        "goes after the block's last property. id is refused: ensure-id gives a block its id."
+    )
     set_property.add_argument("uuid", help="the block's id")
     set_property.add_argument("key", help="the property key, chosen by the caller")
     set_property.add_argument("value", help="the property value")
@@ -192,6 +202,11 @@ def build_parser() -> argparse.ArgumentParser:  # noqa: PLR0915 - one registrati
         'logseq-md set-content --graph ~/notes 69676218-6ca0-4d45-8d0f-d229c8721922 --text "rechecked"',
     )
     _graph(set_content)
+    set_content.epilog = (
+        f"{set_content.epilog}\n\nThe content is the bullet line and its wrapped lines, marker included. Each line\n"
+        "of a multi-line TEXT becomes a wrapped line, indented like the block's own. Text that\n"
+        "would read as a bullet, a property, a drawer or an open code fence is refused."
+    )
     set_content.add_argument("uuid", help="the block's id")
     set_content.add_argument("--text", required=True, help="the new content")
     _dry_run(set_content)
@@ -204,6 +219,9 @@ def build_parser() -> argparse.ArgumentParser:  # noqa: PLR0915 - one registrati
         "logseq-md set-marker --graph ~/notes 69676218-6ca0-4d45-8d0f-d229c8721922 DOING",
     )
     _graph(set_marker)
+    set_marker.epilog = (
+        f"{set_marker.epilog}\n  logseq-md set-marker --graph ~/notes 69676218-6ca0-4d45-8d0f-d229c8721922 none"
+    )
     set_marker.add_argument("uuid", help="the block's id")
     set_marker.add_argument("marker", help="TODO, DOING, DONE, LATER, NOW, WAITING, CANCELED, or none to remove it")
     _dry_run(set_marker)
@@ -279,6 +297,37 @@ def _properties(args: argparse.Namespace) -> int:
     return OK
 
 
+def _ensure_id(args: argparse.Namespace) -> int:
+    target, block = writes.block_for_write(open_graph(args.graph), args.target, page_line=True)
+    found, edit = writes.plan_ensure_id(target.page, block, identity.mint)
+    writes.run(target, edit, dry_run=args.dry_run)
+    if not args.dry_run:
+        print(found)
+    return OK
+
+
+def _set_property(args: argparse.Namespace) -> int:
+    target, block = writes.block_for_write(open_graph(args.graph), args.uuid)
+    edit = writes.plan_set_property(target.page, block, args.key, args.value)
+    writes.run(target, edit, dry_run=args.dry_run)
+    return OK
+
+
+def _set_content(args: argparse.Namespace) -> int:
+    target, block = writes.block_for_write(open_graph(args.graph), args.uuid)
+    edit = writes.plan_set_content(target.page, block, args.text)
+    writes.run(target, edit, dry_run=args.dry_run)
+    return OK
+
+
+def _set_marker(args: argparse.Namespace) -> int:
+    marker = writes.parse_marker(args.marker)
+    target, block = writes.block_for_write(open_graph(args.graph), args.uuid)
+    edit = writes.plan_set_marker(target.page, block, marker)
+    writes.run(target, edit, dry_run=args.dry_run)
+    return OK
+
+
 def _not_implemented(args: argparse.Namespace) -> int:
     print(f"logseq-md {args.verb}: not implemented yet", file=sys.stderr)
     return BAD_ARGUMENTS
@@ -291,11 +340,11 @@ HANDLERS: dict[str, Handler] = {
     "backlinks": _backlinks,
     "pages": _pages,
     "properties": _properties,
-    "ensure-id": _not_implemented,
-    "set-property": _not_implemented,
+    "ensure-id": _ensure_id,
+    "set-property": _set_property,
     "append-child": _not_implemented,
-    "set-content": _not_implemented,
-    "set-marker": _not_implemented,
+    "set-content": _set_content,
+    "set-marker": _set_marker,
 }
 
 

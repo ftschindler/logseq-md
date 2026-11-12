@@ -103,3 +103,26 @@ now in [DESIGN.md §6](DESIGN.md#resolution), with what `show` prints for a page
 so termination never depended on the cycle check; the check is what makes a cycle visible as a
 cycle rather than as the same two blocks repeated until the depth runs out. The fixture test
 runs `--depth 1000` on the cycle and expects exactly one `cycle` entry.
+
+## 2026-11-12 - S7: the write check on the maintainer's graph
+
+`uv run --script .scripts/survey_graph.py <graph>` over 965 files, now with a write check that
+plans each in-block write on every block, applies it in memory and compares the bytes outside
+the planned lines: 22,356 blocks, and for every write planned, `ensure-id` (21,659, with 697
+blocks already carrying an id), `set-property`, `set-content` and `set-marker`, every other byte
+was unchanged. Nothing was written. The property indents are 2,607 conventional and 2 deviant,
+and the continuation orders are the 17 S1 counted; `tests/fixtures/writes/` carries a deviant
+indent deeper than the convention, one at the bullet's own prefix, and the orders that put a
+property after a `DEADLINE:` or before a `:LOGBOOK:`.
+
+**Surprise: 112 blocks refuse `set-marker`.** Every one is a bullet whose text opens a code
+fence, such as `- ```text`. A marker in front of the fence marker stops it opening a fence, so
+the fenced lines below would turn into blocks and properties. The writes now re-parse the page
+after planning a content change and refuse, exit 2, anything that changes the outline beyond the
+block's own content span; `set-content` uses the same check for text that reads as a bullet, a
+property, a drawer or a fence.
+
+**Surprise: the plan and the targets contradicted each other on `ensure-id`.** S4's refusal of a
+`page:line` write names `ensure-id` as the way to get a durable handle, while the plan says every
+write refuses `page:line`. A block with no id has no other address, so `ensure-id` accepts
+`page:line` and every other write takes a uuid. [DESIGN.md §10](DESIGN.md#targets) now says so.
