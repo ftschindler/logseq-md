@@ -23,8 +23,8 @@ the machine instead.
 
 The version is a single line in `pyproject.toml` rather than a file of its own,
 because the package is the unit that ships and `logseq-md --version` reads it
-back out of the installed metadata. Two places to write it would be two places
-to forget. The skill's own VERSION file joins it here when the skill lands.
+back out of the installed metadata. The skill's `VERSION` file is the one copy,
+written here in the same step so the two cannot disagree; a test holds them equal.
 """
 
 from __future__ import annotations
@@ -50,6 +50,7 @@ VERSION_LINE = re.compile(r'^version = "(?P<version>[^"]+)"(?=\r?$)', re.MULTILI
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 PYPROJECT = REPO_ROOT / "pyproject.toml"
+SKILL_VERSION = REPO_ROOT / "skills" / "logseq-md" / "VERSION"
 
 
 def read_version(text: str) -> str:
@@ -149,7 +150,8 @@ def main(argv: list[str] | None = None) -> int:
         return 0
     if arguments.action == "write":
         PYPROJECT.write_bytes(replace_version(text, arguments.version).encode("utf-8"))
-        print(f"pyproject.toml now says {arguments.version}.")
+        SKILL_VERSION.write_bytes(f"{arguments.version}\n".encode())
+        print(f"pyproject.toml and the skill's VERSION now say {arguments.version}.")
         return 0
     if version_changed(arguments.base):
         print(

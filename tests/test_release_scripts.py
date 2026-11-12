@@ -96,17 +96,22 @@ class TestTheVersionLine:
     def test_this_repository_declares_one(self) -> None:
         assert version.read_version(version.PYPROJECT.read_text(encoding="utf-8"))
 
-    def test_write_edits_only_that_line_on_disk(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_write_edits_only_that_line_and_the_skill_version(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         # Bytes, not text: a Windows checkout with CRLF endings has to come back
         # with CRLF endings and nothing else moved.
         pyproject = tmp_path / "pyproject.toml"
         before = b'[project]\r\nname = "x"\r\nversion = "0.1.0"\r\n# version = "9.9.9"\r\n'
         pyproject.write_bytes(before)
+        skill_version = tmp_path / "VERSION"
         monkeypatch.setattr(version, "PYPROJECT", pyproject)
+        monkeypatch.setattr(version, "SKILL_VERSION", skill_version)
 
         assert version.main(["write", "0.2.0"]) == 0
 
         assert pyproject.read_bytes() == before.replace(b'"0.1.0"', b'"0.2.0"')
+        assert skill_version.read_bytes() == b"0.2.0\n"
 
 
 def git(*arguments: str) -> None:

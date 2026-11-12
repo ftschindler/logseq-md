@@ -1,0 +1,155 @@
+{
+  "files": [
+    {
+      "path": "skills/logseq-md/SKILL.md",
+      "sha256": "7626121f4edf269d1ed7d9042f4f3837c0ab93696024151e53fdba3c1b56027d"
+    },
+    {
+      "path": "tests/probes/logseq-md.json",
+      "sha256": "de1ed38ec299ceec0c991ed87d46ce760caaa74a0a771eedde87b4be14641860"
+    }
+  ],
+  "kit": "logseq-md",
+  "outcome": "pass",
+  "recorded": {
+    "at": "2026-11-12T22:12:52Z",
+    "by": "Felix Schindler <107669806+ftschindler@users.noreply.github.com>",
+    "model": "github-copilot/claude-sonnet-5",
+    "opencode_version": "1.19.4",
+    "platform": "linux"
+  },
+  "runs": [
+    {
+      "assertions": [
+        {
+          "kind": "contains_any",
+          "name": "it asks the tool rather than reading the files",
+          "outcome": "pass",
+          "over": "commands",
+          "seen": "present: logseq-md",
+          "values": ["logseq-md"]
+        },
+        {
+          "kind": "contains_all",
+          "name": "it finds the open task",
+          "outcome": "pass",
+          "over": "reply",
+          "seen": "all present",
+          "values": ["check the cone packs"]
+        },
+        {
+          "kind": "contains_any",
+          "name": "the answer names its file",
+          "outcome": "pass",
+          "over": "reply",
+          "seen": "present: Kiln Log.md",
+          "values": ["Kiln Log.md"]
+        }
+      ],
+      "commands": [
+        "skill {\"name\": \"logseq-md\"}",
+        "bash {\"command\": \"cd <sandbox>/work && uvx logseq-md blocks --marker TODO --page \\\"Kiln Log\\\" --graph ./graph\"}",
+        "bash {\"command\": \"cd <sandbox>/work && uvx logseq-md blocks --marker DOING --page \\\"Kiln Log\\\" --graph ./graph\"}"
+      ],
+      "prompt": "My Logseq graph is in ./graph. Which tasks are still open on my Kiln Log page?",
+      "reply": "On your **Kiln Log** page, there's one open task:\n\n- **TODO: check the cone packs** \u2014 nested under \"firing schedule for the small kiln\" (`graph/pages/Kiln Log.md:2`)\n\nNo DOING tasks on that page. That's the only open (TODO/DOING) item currently listed there."
+    },
+    {
+      "assertions": [
+        {
+          "kind": "contains_any",
+          "name": "it asks the tool rather than reading the files",
+          "outcome": "pass",
+          "over": "commands",
+          "seen": "present: logseq-md",
+          "values": ["logseq-md"]
+        },
+        {
+          "kind": "contains_any",
+          "name": "it reads the ancestor",
+          "outcome": "pass",
+          "over": "reply",
+          "seen": "present: spinning practice",
+          "values": ["spinning practice"]
+        }
+      ],
+      "commands": [
+        "skill {\"name\": \"logseq-md\"}",
+        "bash {\"command\": \"cd <sandbox>/work && grep -rn \\\"ply the singles\\\" ./graph\"}",
+        "bash {\"command\": \"cd <sandbox>/work && uvx logseq-md show \\\"graph/pages/Spindle.md:2\\\" --graph ./graph\"}",
+        "bash {\"command\": \"cd <sandbox>/work && uvx logseq-md show \\\"Spindle:2\\\" --graph ./graph\"}",
+        "bash {\"command\": \"cd <sandbox>/work && uvx logseq-md blocks --page Spindle --graph ./graph\"}"
+      ],
+      "prompt": "My Logseq graph is in ./graph. What is the task 'ply the singles' a step of?",
+      "reply": "The task **\"ply the singles\"** (in `graph/pages/Spindle.md`, line 2) is a step of **\"spinning practice\"** \u2014 the top-level block on the Spindle page that it's nested directly under."
+    },
+    {
+      "assertions": [
+        {
+          "kind": "contains_all",
+          "name": "it gives the block an id before writing beside it",
+          "outcome": "pass",
+          "over": "commands",
+          "seen": "all present",
+          "values": ["ensure-id", "append-child"]
+        },
+        {
+          "kind": "contains_all",
+          "name": "the note landed",
+          "outcome": "pass",
+          "over": "file:pages/Kiln Log.md",
+          "seen": "all present",
+          "values": ["checked on Friday"]
+        }
+      ],
+      "commands": [
+        "skill {\"name\": \"logseq-md\"}",
+        "bash {\"command\": \"uvx logseq-md blocks --graph ./graph --page \\\"Kiln Log\\\"\"}",
+        "bash {\"command\": \"uvx logseq-md ensure-id --graph ./graph \\\"Kiln Log:33\\\"\"}",
+        "bash {\"command\": \"uvx logseq-md append-child --graph ./graph 6af639cf-51a2-495f-b16a-e66e63d145bd --text \\\"checked on Friday\\\"\"}",
+        "bash {\"command\": \"uvx logseq-md show --graph ./graph 6af639cf-51a2-495f-b16a-e66e63d145bd\"}",
+        "bash {\"command\": \"uvx logseq-md blocks --graph ./graph --page \\\"Kiln Log\\\" | grep -A3 \\\"no id yet\\\"\"}"
+      ],
+      "prompt": "My Logseq graph is in ./graph. On the Kiln Log page, add a child note under the block 'a block with no id yet' saying: checked on Friday",
+      "reply": "Found it at line 33, with no id yet. I'll assign an id then add the child note.\nDone. On the **Kiln Log** page, the block \"a block with no id yet\" (now assigned `id:: 6af639cf-51a2-495f-b16a-e66e63d145bd`) has a new child block: \"checked on Friday\" (`graph/pages/Kiln Log.md:36`)."
+    },
+    {
+      "assertions": [
+        {
+          "kind": "contains_any",
+          "name": "it notes the arrival",
+          "outcome": "pass",
+          "over": "file:pages/Kiln Log.md",
+          "seen": "present: arrived",
+          "values": ["arrived"]
+        },
+        {
+          "kind": "contains_all",
+          "name": "it leaves the task's marker alone",
+          "outcome": "pass",
+          "over": "file:pages/Kiln Log.md",
+          "seen": "all present",
+          "values": ["TODO check the cone packs"]
+        },
+        {
+          "kind": "contains_none",
+          "name": "it never touches a marker",
+          "outcome": "pass",
+          "over": "commands",
+          "seen": "none present",
+          "values": ["set-marker"]
+        }
+      ],
+      "commands": [
+        "skill {\"name\": \"logseq-md\"}",
+        "bash {\"command\": \"grep -rn -i \\\"cone\\\" ./graph --include=*.md\"}",
+        "bash {\"command\": \"uvx logseq-md show \\\"Kiln Log.md:2\\\" --graph ./graph 2>&1; echo ---; uvx logseq-md blocks --page \\\"Kiln Log\\\" --graph ./graph\"}",
+        "bash {\"command\": \"uvx logseq-md append-child 7a20b1c3-0000-4d5e-8f60-000000000001 --text \\\"cone packs for the small kiln arrived today\\\" --graph ./graph --dry-run\"}",
+        "bash {\"command\": \"uvx logseq-md append-child 7a20b1c3-0000-4d5e-8f60-000000000001 --text \\\"cone packs for the small kiln arrived today\\\" --graph ./graph\"}"
+      ],
+      "prompt": "My Logseq graph is in ./graph. The cone packs for the small kiln arrived today. Note that in the graph next to the task about them.",
+      "reply": "Found the task \"TODO check the cone packs\" (id `7a20b1c3-0000-4d5e-8f60-000000000001`) in Kiln Log. I'll add the note as a child block.\nThat diff looks correct \u2014 it's adding the note as a sibling under the \"check the cone packs\" task, alongside the existing \"bisque load on the lower shelf\" child. Applying it now.\nAdded a note \"cone packs for the small kiln arrived today\" as a child of the **TODO check the cone packs** task in `graph/pages/Kiln Log.md`. The task itself was left untouched (still open) since closing it is your call."
+    }
+  ],
+  "schema_version": 1
+}

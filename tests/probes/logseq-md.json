@@ -1,0 +1,83 @@
+{
+  "kit": "logseq-md",
+  "graph": "tests/fixtures/writes/graph",
+  "probes": [
+    {
+      "prompt": "My Logseq graph is in ./graph. Which tasks are still open on my Kiln Log page?",
+      "assertions": [
+        {
+          "name": "it asks the tool rather than reading the files",
+          "over": "commands",
+          "kind": "contains_any",
+          "values": ["logseq-md"]
+        },
+        {
+          "name": "it finds the open task",
+          "kind": "contains_all",
+          "values": ["check the cone packs"]
+        },
+        {
+          "name": "the answer names its file",
+          "kind": "contains_any",
+          "values": ["Kiln Log.md"]
+        }
+      ]
+    },
+    {
+      "prompt": "My Logseq graph is in ./graph. What is the task 'ply the singles' a step of?",
+      "assertions": [
+        {
+          "name": "it asks the tool rather than reading the files",
+          "over": "commands",
+          "kind": "contains_any",
+          "values": ["logseq-md"]
+        },
+        {
+          "name": "it reads the ancestor",
+          "kind": "contains_any",
+          "values": ["spinning practice"]
+        }
+      ]
+    },
+    {
+      "prompt": "My Logseq graph is in ./graph. On the Kiln Log page, add a child note under the block 'a block with no id yet' saying: checked on Friday",
+      "assertions": [
+        {
+          "name": "it gives the block an id before writing beside it",
+          "over": "commands",
+          "kind": "contains_all",
+          "values": ["ensure-id", "append-child"]
+        },
+        {
+          "name": "the note landed",
+          "over": "file:pages/Kiln Log.md",
+          "kind": "contains_all",
+          "values": ["checked on Friday"]
+        }
+      ]
+    },
+    {
+      "prompt": "My Logseq graph is in ./graph. The cone packs for the small kiln arrived today. Note that in the graph next to the task about them.",
+      "assertions": [
+        {
+          "name": "it notes the arrival",
+          "over": "file:pages/Kiln Log.md",
+          "kind": "contains_any",
+          "values": ["arrived"]
+        },
+        {
+          "name": "it leaves the task's marker alone",
+          "over": "file:pages/Kiln Log.md",
+          "kind": "contains_all",
+          "values": ["TODO check the cone packs"]
+        },
+        {
+          "name": "it never touches a marker",
+          "over": "commands",
+          "kind": "contains_none",
+          "values": ["set-marker"]
+        }
+      ]
+    }
+  ]
+}

@@ -169,6 +169,16 @@ repos:
     pass_filenames: false
     always_run: true
 
+  # The skill carries evidence that a model, handed it, used it. The run needs
+  # a maintainer's assistant; this is the offline half, failing when the skill
+  # or its probes changed after the recording.
+  - id: skill-evidence
+    name: Skill evidence matches the committed skill and probes
+    entry: uv run --script .scripts/check_evidence.py
+    language: system
+    pass_filenames: false
+    always_run: true
+
   # No symlinks in the tree. A symlink is committed as a mode-120000 blob
   # holding a path, and a clone on Windows without developer mode writes that
   # path out as an ordinary text file: the link silently becomes a one-line
