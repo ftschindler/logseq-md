@@ -254,7 +254,7 @@ jobs:
         set -euo pipefail
         git config user.name "${BOT_NAME}"
         git config user.email "${BOT_EMAIL}"
-        git add pyproject.toml
+        git add pyproject.toml skills/logseq-md/VERSION
         git commit -m "Release ${NEXT}"
         git tag -a "v${NEXT}" -m "Release ${NEXT}"
         git push --atomic origin HEAD:main "refs/tags/v${NEXT}"

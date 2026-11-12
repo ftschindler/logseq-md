@@ -156,3 +156,20 @@ prefix under the file's other blocks with the same prefix, as
 with what the write started from, and a file being created has nothing to compare. `--create`
 hard-links a temporary file into place, which fails rather than overwrites when a file appeared
 meanwhile, on Windows too, and that is exit 3.
+
+## 2026-11-12 - S9: what the probes showed
+
+`uv run --script .scripts/record_evidence.py logseq-md --model github-copilot/claude-sonnet-5`,
+four probes against a copy of `tests/fixtures/writes/graph/`, each in a home holding only the
+skill. In every probe the model loaded the skill unprompted and read and wrote through
+`uvx logseq-md`: it named the file, read the parent of a task, ran `ensure-id` on `page:line`
+before `append-child`, and left `TODO` on the task it wrote beside. It ran `--dry-run` before
+some writes and not others, which the probes do not assert. So the skill is reached for, and for
+now there is no rule ([DESIGN.md §13](DESIGN.md#13-still-open)).
+
+**Surprise: there is no way to find a block by its words.** Asked what a named task was a step
+of, the model tried a `--query` flag on `blocks`, found none in the help, and fell back to
+`grep -rn` for the page and line, then `show page:line`. That is a reasonable path rather than
+a defect, so the skill now says so outright, and in the final recording the model went to `grep -rn` first
+to locate a block and to the tool to read it. A
+text filter on `blocks` is a candidate for a later stage, not this one, which leaves `src/` alone.

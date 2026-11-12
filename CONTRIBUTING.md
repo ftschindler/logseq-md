@@ -36,6 +36,22 @@ make check       # every hook over every file, which is what CI runs
   refused. What a pull request carries instead is a label saying how big it is: `major`, `minor`,
   `patch` or `no-release`.
 
+## Skill evidence
+
+`skills/logseq-md/` is the skill, and `tests/evidence/logseq-md.json` is the record that a model
+handed it actually used it. The record is made on a maintainer's machine, because it needs an
+authenticated [opencode](https://opencode.ai/):
+
+```sh
+uv run --script .scripts/record_evidence.py logseq-md --model <provider/model>
+```
+
+Each probe in `tests/probes/logseq-md.json` runs in a throwaway home holding only the skill and
+a copy of the fixture graph the probes name, and its assertions are checked against the reply,
+the commands the model ran and the graph afterwards. CI and the pre-commit hook run
+`.scripts/check_evidence.py`, which fails when the skill or its probes changed after the
+recording, or when the recording is not a `pass`. Edit either, and record again.
+
 ## Pull requests
 
 One bump label, exactly. Two is a disagreement rather than a bigger bump.

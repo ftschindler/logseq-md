@@ -28,6 +28,17 @@ changes no byte outside its own lines. A graph is opened from `--graph` or `LOGS
 its `logseq/config.edn` is read for the filename and journal formats. Ids are minted the way
 Logseq mints them, with the creation time in the first eight hex digits.
 
+## The skill
+
+`skills/logseq-md/` teaches a model to reach for this tool and to use it with care: read a
+block's ancestors before acting on it, name the file an answer came from, give a block an id
+before writing beside it, and leave closing tasks to the graph's owner. Subscribe to it with
+[`akit`](https://github.com/ftschindler/federated-agent-kits):
+
+```sh
+akit add ftschindler/logseq-md logseq-md
+```
+
 ## What this is for
 
 Agents and scripts that work against a graph the owner also edits by hand, in the app, on more
