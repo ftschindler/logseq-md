@@ -126,3 +126,33 @@ property, a drawer or a fence.
 `page:line` write names `ensure-id` as the way to get a durable handle, while the plan says every
 write refuses `page:line`. A block with no id has no other address, so `ensure-id` accepts
 `page:line` and every other write takes a uuid. [DESIGN.md §10](DESIGN.md#targets) now says so.
+
+## 2026-11-12 - S8: the append check on the maintainer's graph
+
+`uv run --script .scripts/survey_graph.py <graph>` over the same 965 files, now with an
+indentation report and an append check. Of the 8,156 blocks with children, 8,151 extend their
+parent's prefix by a tab and 5 by two spaces, the `TAB TAB SP SP` prefixes S1 counted; no parent
+has children with differing prefixes, and none has a child that does not extend its prefix. The
+append check planned `append-child` under all 22,356 blocks and every outline page, and
+`--record-as` under every block, applied each in memory and refused none. Every byte outside
+the inserted lines was unchanged, except the designed one: in 2,523 plans (1,700 with
+`--record-as`) the file had no final newline and its old last line gained the separator. Every
+new child's prefix matched its siblings'. `tests/fixtures/insertion/` carries the two-space
+extension under a tab prefix beside the tab one.
+
+**Surprise: a blank line is the block's above it.** The first cut put the new child before
+trailing blank lines, so it would not open a gap. The re-parse refused it: a blank line is
+content of the block above it, so the child took those lines and the parent lost them. The child
+now goes after them, which is the only position that leaves every other block's lines as they
+were. [DESIGN.md §7](DESIGN.md#position) says so.
+
+**Surprise: "whatever the target's own prefix ends in" read literally gives one space.** A
+space-indented block with no evidence at its depth would have got a one-space child. It now
+takes the prefix's trailing run of spaces, or a tab, and the evidence at a depth is the child
+prefix under the file's other blocks with the same prefix, as
+[DESIGN.md §7](DESIGN.md#indentation-on-insert) now says.
+
+**Surprise: a new file cannot use the splice's rename.** The splice's guard compares the file
+with what the write started from, and a file being created has nothing to compare. `--create`
+hard-links a temporary file into place, which fails rather than overwrites when a file appeared
+meanwhile, on Windows too, and that is exit 3.

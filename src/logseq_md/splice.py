@@ -10,10 +10,11 @@ replace, else of the line they follow, else of the first line that has one,
 and `\\n` only in a file that has no ending anywhere. A file without a final
 newline keeps not having one: an insertion after its last line moves the
 missing ending onto the new last line, and the old last line gains the ending
-that now separates the two.
+that now separates the two. An empty file, or one being created, has none either.
 
 `commit` writes atomically: to a temporary file in the same directory, then a
-rename over the original, which `Path.replace` does on Windows too. Just before
+rename over the original, which `Path.replace` does on Windows too. `create`
+makes a file that is not there yet, and refuses when one appeared meanwhile. Just before
 the rename it reads the file again and compares it byte for byte with what the
 write started from, refusing with exit 3 if anything moved.
 """
@@ -81,9 +82,10 @@ def apply(document: Document, edits: Sequence[Edit]) -> Document:
             if edit.start < edit.end:
                 # The replaced range held the last line: its ending, or its lack of one, stays last.
                 new[-1] = Line(new[-1].indent, new[-1].content, lines[-1].ending)
-            elif lines and not lines[-1].ending:
-                # Appending after a last line with no ending: it gains the separator, the new last line loses it.
-                lines[-1] = Line(lines[-1].indent, lines[-1].content, ending)
+            elif not lines or not lines[-1].ending:
+                # Appending after a last line with no ending, or to no lines at all: the new last line has none.
+                if lines:
+                    lines[-1] = Line(lines[-1].indent, lines[-1].content, ending)
                 new[-1] = Line(new[-1].indent, new[-1].content, "")
         lines[edit.start : edit.end] = new
     return Document(tuple(lines), document.bom)
@@ -117,3 +119,24 @@ def commit(path: Path, before: bytes, after: bytes) -> None:
     except BaseException:
         Path(temporary).unlink(missing_ok=True)
         raise
+
+
+def create(path: Path, after: bytes) -> None:
+    """Write `after` as a new file at `path`, atomically, refusing with exit 3 if one appeared meanwhile.
+
+    The bytes go to a temporary file first and are then hard-linked into place,
+    which fails rather than overwrites when the name is taken, on Windows too.
+    """
+    path.parent.mkdir(parents=True, exist_ok=True)
+    handle, temporary = tempfile.mkstemp(prefix=f".{path.name}.", suffix=".tmp", dir=path.parent)
+    try:
+        with os.fdopen(handle, "wb") as out:
+            out.write(after)
+            out.flush()
+            os.fsync(out.fileno())
+        try:
+            os.link(temporary, path)
+        except FileExistsError as error:
+            raise Refusal(FILE_CHANGED, f"{path}: created since it was looked for; read it again and retry") from error
+    finally:
+        Path(temporary).unlink(missing_ok=True)

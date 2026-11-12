@@ -27,7 +27,10 @@ graph"):
   the splice and the write planners, and applies them in memory only: for every
   block, it plans each in-block write, applies it to the parsed document, and
   counts whether every byte outside the planned lines is unchanged. Nothing is
-  written.
+  written. The append check does the same for `append-child`, with and without
+  `--record-as`, and also counts whether the new child's prefix equals its
+  siblings'. The indentation report is the survey's own: for every block with
+  children, whether the children's prefixes extend the parent's, and by what.
 """
 
 from __future__ import annotations
@@ -132,6 +135,11 @@ def indent_of(body: bytes) -> bytes:
     return body[: len(body) - len(body.lstrip(b" \t"))]
 
 
+def depth_of(prefix: bytes) -> int:
+    """An indent's depth to compare, a tab counting as two spaces, as Logseq nests them."""
+    return 2 * prefix.count(b"\t") + prefix.count(b" ")
+
+
 def split(data: bytes) -> list[tuple[bytes, bytes]]:
     """Lines as (body, ending), independently of `src/`."""
     out: list[tuple[bytes, bytes]] = []
@@ -180,6 +188,8 @@ class Survey:
         self.name_failures: Counter[str] = Counter()
         self.id_scan: dict[str, object] = {}
         self.write_check: Counter[str] = Counter()
+        self.indentation: Counter[str] = Counter()
+        self.append_check: Counter[str] = Counter()
         self.unclassified: Counter[str] = Counter()
         self.top_level: Counter[str] = Counter()
         self.block_ids: set[bytes] = set()
@@ -641,6 +651,106 @@ def write_check(result: Survey, graph: Path) -> None:
                 result.write_check[f"{verb}: {'only its own lines' if kept else 'OTHER BYTES CHANGED'}"] += 1
 
 
+def children_prefixes(data: bytes) -> list[tuple[bytes, list[bytes]]]:
+    """Every bullet's prefix with its children's prefixes, read by the survey's own rules, fences skipped."""
+    stack: list[tuple[bytes, list[bytes]]] = []
+    done: list[tuple[bytes, list[bytes]]] = []
+    fence: bytes | None = None
+    for body, _ in split(data):
+        content = body.lstrip(b" \t")
+        if fence is not None:
+            if content.startswith(fence):
+                fence = None
+            continue
+        if not BULLET.match(content):
+            opening = FENCE.match(content)
+            fence = opening.group(1) if opening else None
+            continue
+        prefix = indent_of(body)
+        while stack and depth_of(stack[-1][0]) >= depth_of(prefix):
+            done.append(stack.pop())
+        if stack:
+            stack[-1][1].append(prefix)
+        stack.append((prefix, []))
+        opening = FENCE.match(content[1:].lstrip(b" \t"))
+        fence = opening.group(1) if opening else None
+    return done + stack
+
+
+def indentation(result: Survey, graph: Path) -> None:
+    """For every block with children, whether its children's prefixes extend its own, and by what shape."""
+    for directory in ("pages", "journals"):
+        root = graph / directory
+        if not root.is_dir():
+            continue
+        for path in sorted(root.rglob("*.md")):
+            if not path.is_file():
+                continue
+            with path.open("rb") as handle:
+                data = handle.read()
+            for parent, children in children_prefixes(data):
+                if not children:
+                    continue
+                if len(set(children)) > 1:
+                    result.indentation["children with differing prefixes"] += 1
+                if all(child.startswith(parent) for child in children):
+                    for step in {tokens(child[len(parent) :]) for child in children}:
+                        result.indentation[f"extended by {step}"] += 1
+                else:
+                    result.indentation["a child prefix that does not extend the parent's"] += 1
+
+
+def append_check(result: Survey, graph: Path) -> None:
+    """Plan append-child on every block and page, with and without --record-as, apply in memory and count."""
+    model = graph_model.Graph(graph, graph_model.read_config(graph))
+    minted = "00000000-0000-4000-8000-000000000000"
+    for path in model.files():
+        try:
+            page = block_model.parse(line_model.read(path))
+        except Refusal:
+            continue
+        before = b"".join(line.text().encode() for line in page.document.lines)
+        targets = [*page.blocks, None] if page.outline else []
+        for parent in targets:
+            for verb, kwargs in (
+                ("append-child", {}),
+                ("--record-as", {"child_id": minted, "record_as": "survey-key"}),
+            ):
+                if parent is None and kwargs:
+                    continue
+                try:
+                    edits = write_model.plan_append_child(page, parent, "text\nwrapped", **kwargs)
+                except Refusal:
+                    result.append_check[f"{verb}: refused"] += 1
+                    continue
+                after = block_model.parse(splice_model.apply(page.document, edits))
+                rest = b"".join(
+                    line.text().encode() for i, line in enumerate(after.document.lines) if not _inserted(i, edits)
+                )
+                if rest == before:
+                    outcome = "only inserted lines"
+                elif rest.rstrip(b"\r\n") == before and not before.endswith((b"\n", b"\r")):
+                    outcome = "only inserted lines, and the old last line's ending"
+                else:
+                    outcome = "OTHER BYTES CHANGED"
+                result.append_check[f"{verb}: {outcome}"] += 1
+                if parent is not None and parent.children:
+                    new = next(b for b in after.blocks if b.parent == parent.index and b.index > parent.children[-1])
+                    old = page.blocks[parent.children[-1]].prefix
+                    same = new.prefix == old
+                    result.append_check[f"{verb}: prefix {'matches' if same else 'DIFFERS FROM'} the siblings'"] += 1
+
+
+def _inserted(index: int, edits: list) -> bool:
+    shift = 0
+    for edit in sorted(edits, key=lambda edit: edit.start):
+        start = edit.start + shift
+        if start <= index < start + len(edit.texts):
+            return True
+        shift += len(edit.texts) - (edit.end - edit.start)
+    return False
+
+
 def survey(graph: Path) -> Survey:
     """Walk `pages/` and `journals/` and count what they hold."""
     result = Survey()
@@ -658,6 +768,8 @@ def survey(graph: Path) -> Survey:
     name_check(result, graph)
     id_scan(result, graph)
     write_check(result, graph)
+    indentation(result, graph)
+    append_check(result, graph)
     dangling = [ref for ref in result.block_refs if ref not in result.block_ids]
     result.counts["distinct ((uuid)) targets"] = len(result.block_refs)
     result.counts["dangling ((uuid)) targets"] = len(dangling)
@@ -694,6 +806,8 @@ def report(result: Survey) -> str:
     section("name check failures, by shape", result.name_failures.most_common())
     section("id scan (identity.scan, in memory)", list(result.id_scan.items()))
     section("write check (planned and applied in memory)", sorted(result.write_check.items()))
+    section("indentation of children under their parent (by shape)", sorted(result.indentation.items()))
+    section("append check (planned and applied in memory)", sorted(result.append_check.items()))
     section("round-trip failures (first differing line)", result.round_trip_failures.most_common())
     section("unclassified", result.unclassified.most_common())
     return "\n".join(out).lstrip("\n") + "\n"

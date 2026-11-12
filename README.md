@@ -16,10 +16,11 @@ That needs no install beyond [uv](https://docs.astral.sh/uv/).
 **Pre-alpha.** The read verbs work: `blocks` lists blocks by marker, tag, property, date and
 page, each with its ancestors; `show` prints one block or page with its references resolved;
 `backlinks` lists what links to a page; `pages` lists every page and journal; `properties`
-prints which keys read output drops. Four of the five writes work: `ensure-id`, `set-property`,
-`set-content` and `set-marker` splice the lines they change into the file, write it atomically,
-refuse with exit 3 if the file changed since it was read, and print a unified diff instead with
-`--dry-run`. `append-child` is registered and exits 2 saying it is not implemented yet.
+prints which keys read output drops. All five writes work: `ensure-id`, `set-property`,
+`append-child`, `set-content` and `set-marker` splice the lines they change into the file, write
+it atomically, refuse with exit 3 if the file changed since it was read, and print a unified diff
+instead with `--dry-run`. `append-child --record-as <key>` records the new block's id on its
+parent and updates that block rather than adding another on the next run.
 
 Underneath, a file is held as lines that write back to the identical bytes, which the round-trip
 gate checks over every fixture on Linux and Windows, and the mutation gate checks that a write

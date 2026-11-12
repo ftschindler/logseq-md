@@ -507,7 +507,13 @@ signal rather than an accident, and it costs the caller one case to handle.
 
 `append-child` inserts after the target's existing children and before the next sibling. Where
 the target has properties and a `:LOGBOOK:`, the insertion goes after all of them, because those
-belong to the target rather than to its children.
+belong to the target rather than to its children. Blank lines belong to the block above them,
+so the insertion goes after those too.
+
+The target can also be a page or a journal date, and the new block is then the page's last
+top-level block. A page holding only blank lines takes its first block; a page with prose and
+no outline is refused, like every write. `--record-as` needs a block to record on, so with a
+page target it is exit 2.
 
 ### Indentation on insert
 
@@ -520,8 +526,11 @@ so "the target's indent plus one tab" writes a child whose indentation does not 
 siblings in roughly a third of a real graph. Logseq may still read it; a person reading the diff
 will not.
 
-Where the target has no children and the file gives no evidence at that depth, the tool extends
-with whatever the target's own prefix ends in.
+Where the target has no children, the evidence at that depth is the child prefix most common
+under the file's other blocks with the target's own prefix. Where the file gives none, the tool
+extends with whatever the target's own prefix ends in: a tab, or its trailing run of spaces. A
+top-level target with no evidence takes a tab, as Logseq does. A new top-level block copies the
+page's last one.
 
 ### Files that do not exist
 
@@ -529,7 +538,9 @@ Every write edits a file that is already there, with one exception. Logseq creat
 journal when the application is opened, so on a day it has not been opened the file is absent.
 
 `--create` is how a caller says to make it. Without the flag the command refuses, so a mistyped
-date cannot quietly add a page to somebody's graph.
+date cannot quietly add a page to somebody's graph. With the flag, only a date is accepted; a page
+name is exit 2. The new file is written atomically and refused with exit 3 if one appeared in the
+meantime, and like most of a real graph it has no final newline.
 
 ### What a write never does
 
@@ -700,7 +711,7 @@ Write verbs, each taking `--dry-run`:
 ```sh
 logseq-md ensure-id     --graph PATH <target>
 logseq-md set-property  --graph PATH <uuid> <key> <value>
-logseq-md append-child  --graph PATH <uuid> --text ... [--record-as <key>]
+logseq-md append-child  --graph PATH <target> --text ... [--record-as <key>] [--create]
 logseq-md set-content   --graph PATH <uuid> --text ...
 logseq-md set-marker    --graph PATH <uuid> <MARKER>
 ```
