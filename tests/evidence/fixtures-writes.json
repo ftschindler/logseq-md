@@ -1,0 +1,38 @@
+{
+  "files": [
+    {
+      "path": "tests/fixtures/writes/graph/journals/2031_03_04.md",
+      "sha256": "cd8258a1a7e9a676d1082710d355ed4c60799ac49587fb1a7b3a6815854036ab"
+    },
+    {
+      "path": "tests/fixtures/writes/graph/logseq/config.edn",
+      "sha256": "1faa4161fedb3880d81c5805dc331b5157fe437d7837c66f5ce92c26c9695cac"
+    },
+    {
+      "path": "tests/fixtures/writes/graph/pages/Dye Pot.md",
+      "sha256": "91995a7360a1a4c2dd9058bdb52314dfa29196fed6d4f340a44a85ee01130a60"
+    },
+    {
+      "path": "tests/fixtures/writes/graph/pages/Glaze Recipes.md",
+      "sha256": "43fccfa7ca7c6839e5759a0ededdb9def3dd05afcb86429c67f31ce3f93bd2cf"
+    },
+    {
+      "path": "tests/fixtures/writes/graph/pages/Kiln Log.md",
+      "sha256": "9763d294d2df582fc46f760d68e6344b7fe39e557b7cdcde339169cb5ac08da5"
+    },
+    {
+      "path": "tests/fixtures/writes/graph/pages/Loom Notes.md",
+      "sha256": "2267981770ef284af489603e8ee2efa68d55f05d914199a39dacc46885207ae4"
+    },
+    {
+      "path": "tests/fixtures/writes/graph/pages/Spindle.md",
+      "sha256": "dcd9bfb158e4cfa63497c46eea6f1fcc40960a349452fb8a3834207ae0bbaac3"
+    }
+  ],
+  "graph_files_scanned": 2200,
+  "outcome": "pass",
+  "recorded_at": "2026-11-12T20:40:12Z",
+  "schema_version": 1,
+  "script_sha256": "83f23c82b9e8f0973c183b485fe0fb31d926d55013c5fa942d91ee0a1e1d4234",
+  "topic": "writes"
+}

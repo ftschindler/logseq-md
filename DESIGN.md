@@ -713,7 +713,8 @@ four.
 **`page:line` is accepted for reads only.** A line number is invalidated by the owner editing
 the page between two runs, which is the race ids exist to remove. It is convenient for a first
 look at an unfamiliar graph and that is the whole of its value. Every write verb refuses it and
-names `ensure-id` as the way to get a handle that lasts.
+names `ensure-id` as the way to get a handle that lasts. `ensure-id` itself is the one exception:
+a block with no id has no other address, and the verb prints the id that every later write uses.
 
 **How each form is written.** A uuid is compared without regard to case. A date is
 `YYYY-MM-DD`, and a journal's title as the config renders it, such as `Feb 28th, 2025`, is a
@@ -783,7 +784,8 @@ None of these blocks the first piece of work.
 it wrote earlier, and recognising "a block I wrote" is the first place a caller's workflow
 could leak into the tool. The current answer keeps the leak out by making the verb take a uuid
 and ask no questions: the caller remembers its own id. Whether that is enough in practice is a
-thing to learn from the first real caller.
+thing to learn from the first real caller. It ships that way for now, replacing the bullet line and
+its wrapped lines, marker included, and refusing text that would read as structure.
 
 **How long does the file format have?** Logseq's own CLI targets database graphs, and the
 official tooling has moved. This changes nothing about a graph already on disk, and it does

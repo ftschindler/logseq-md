@@ -23,7 +23,11 @@ graph"):
   the same construct can disagree. The name check imports the graph model,
   because whether a filename survives the trip to a page name and back is a
   question about that model and nothing else. The id scan imports the identity
-  model, and only to time it and count what it finds.
+  model, and only to time it and count what it finds. The write check imports
+  the splice and the write planners, and applies them in memory only: for every
+  block, it plans each in-block write, applies it to the parsed document, and
+  counts whether every byte outside the planned lines is unchanged. Nothing is
+  written.
 """
 
 from __future__ import annotations
@@ -41,6 +45,8 @@ from logseq_md import blocks as block_model  # noqa: E402
 from logseq_md import graph as graph_model  # noqa: E402
 from logseq_md import identity as identity_model  # noqa: E402
 from logseq_md import lines as line_model  # noqa: E402
+from logseq_md import splice as splice_model  # noqa: E402
+from logseq_md import writes as write_model  # noqa: E402
 from logseq_md.exits import Refusal  # noqa: E402
 
 #: Logseq's own property keys and those of plugins seen in the wild, printed by
@@ -173,6 +179,7 @@ class Survey:
         self.names: Counter[str] = Counter()
         self.name_failures: Counter[str] = Counter()
         self.id_scan: dict[str, object] = {}
+        self.write_check: Counter[str] = Counter()
         self.unclassified: Counter[str] = Counter()
         self.top_level: Counter[str] = Counter()
         self.block_ids: set[bytes] = set()
@@ -596,6 +603,44 @@ def id_scan(result: Survey, graph: Path) -> None:
     result.id_scan["page-level ids"] = sum(1 for where in ids.found.values() for w in where if w.block is None)
 
 
+WRITE_PLANS = {
+    "ensure-id": lambda page, block: write_model.plan_ensure_id(
+        page, block, lambda: "00000000-0000-4000-8000-000000000000"
+    )[1],
+    "set-property": lambda page, block: write_model.plan_set_property(page, block, "survey-key", "value"),
+    "set-content": lambda page, block: write_model.plan_set_content(page, block, "text\nwrapped"),
+    "set-marker": lambda page, block: write_model.plan_set_marker(page, block, None if block.marker else "TODO"),
+}
+
+
+def write_check(result: Survey, graph: Path) -> None:
+    """Plan every in-block write on every block, apply it in memory, and count what stayed put."""
+    model = graph_model.Graph(graph, graph_model.read_config(graph))
+    for path in model.files():
+        try:
+            page = block_model.parse(line_model.read(path))
+        except Refusal:
+            continue
+        before = page.document.to_bytes()
+        sizes = [len(line.text().encode()) for line in page.document.lines]
+        head = len(before) - sum(sizes)
+        for block in page.blocks:
+            for verb, plan in WRITE_PLANS.items():
+                try:
+                    edit = plan(page, block)
+                except Refusal:
+                    result.write_check[f"{verb}: refused"] += 1
+                    continue
+                if edit is None:
+                    result.write_check[f"{verb}: already so"] += 1
+                    continue
+                after = splice_model.apply(page.document, [edit]).to_bytes()
+                start = head + sum(sizes[: edit.start])
+                end = head + sum(sizes[: edit.end])
+                kept = after.startswith(before[:start]) and after.endswith(before[end:])
+                result.write_check[f"{verb}: {'only its own lines' if kept else 'OTHER BYTES CHANGED'}"] += 1
+
+
 def survey(graph: Path) -> Survey:
     """Walk `pages/` and `journals/` and count what they hold."""
     result = Survey()
@@ -612,6 +657,7 @@ def survey(graph: Path) -> Survey:
     result.config(graph)
     name_check(result, graph)
     id_scan(result, graph)
+    write_check(result, graph)
     dangling = [ref for ref in result.block_refs if ref not in result.block_ids]
     result.counts["distinct ((uuid)) targets"] = len(result.block_refs)
     result.counts["dangling ((uuid)) targets"] = len(dangling)
@@ -647,6 +693,7 @@ def report(result: Survey) -> str:
     section("name check (filename -> page name or date -> filename)", sorted(result.names.items()))
     section("name check failures, by shape", result.name_failures.most_common())
     section("id scan (identity.scan, in memory)", list(result.id_scan.items()))
+    section("write check (planned and applied in memory)", sorted(result.write_check.items()))
     section("round-trip failures (first differing line)", result.round_trip_failures.most_common())
     section("unclassified", result.unclassified.most_common())
     return "\n".join(out).lstrip("\n") + "\n"

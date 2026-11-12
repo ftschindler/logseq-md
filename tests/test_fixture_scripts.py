@@ -112,6 +112,14 @@ class TestSurvey:
         assert (scan["distinct ids"], scan["ids on more than one block"]) == (1, 1)
         assert float(str(scan["seconds"])) >= 0
 
+    def test_the_write_check_plans_every_write_and_writes_nothing(self, graph: Path) -> None:
+        before = {path: path.read_bytes() for path in graph.rglob("*") if path.is_file()}
+        checked = survey_graph.survey(graph).write_check
+        assert checked["set-property: only its own lines"] > 0
+        assert checked["set-marker: refused"] == 1  # the bullet that opens a fence
+        assert not [key for key in checked if "OTHER BYTES" in key]
+        assert {path: path.read_bytes() for path in graph.rglob("*") if path.is_file()} == before
+
     def test_logbook_and_prefixes_are_shapes(self, graph: Path) -> None:
         result = survey_graph.survey(graph)
         assert result.clock_per_logbook == {1: 1}
