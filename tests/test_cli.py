@@ -90,11 +90,11 @@ def test_every_verb_has_help_with_an_example(verb: str, capsys: pytest.CaptureFi
 def test_verbs_still_on_a_placeholder() -> None:
     # S10 asserts this is empty. Until then it names what is left, so a stage
     # that implements a verb has to say so here.
-    assert placeholders() == sorted(VERBS)
+    assert placeholders() == sorted(set(VERBS) - {"blocks", "pages", "properties"})
 
 
 def test_a_placeholder_exits_2(capsys: pytest.CaptureFixture[str]) -> None:
-    assert main(["properties"]) == BAD_ARGUMENTS
+    assert main(["show", "x"]) == BAD_ARGUMENTS
     assert "not implemented yet" in capsys.readouterr().err
 
 
