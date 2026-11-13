@@ -13,14 +13,15 @@ uvx logseq-md --help
 
 That needs no install beyond [uv](https://docs.astral.sh/uv/).
 
-**Pre-alpha.** The read verbs work: `blocks` lists blocks by marker, tag, property, date and
-page, each with its ancestors; `show` prints one block or page with its references resolved;
+Five reads and five writes ship. `blocks` lists blocks by marker, tag, property, date and page,
+each with its ancestors; `show` prints one block or page with its references resolved;
 `backlinks` lists what links to a page; `pages` lists every page and journal; `properties`
-prints which keys read output drops. All five writes work: `ensure-id`, `set-property`,
-`append-child`, `set-content` and `set-marker` splice the lines they change into the file, write
-it atomically, refuse with exit 3 if the file changed since it was read, and print a unified diff
-instead with `--dry-run`. `append-child --record-as <key>` records the new block's id on its
-parent and updates that block rather than adding another on the next run.
+prints which keys read output drops. The writes, `ensure-id`, `set-property`, `append-child`,
+`set-content` and `set-marker`, splice the lines they change into the file, write it atomically,
+refuse with exit 3 if the file changed since it was read, and print a unified diff instead with
+`--dry-run`. `append-child --record-as <key>` records the new block's id on its parent and
+updates that block rather than adding another on the next run. The version stays `0.x` until
+the tool has seen a month of real use.
 
 Underneath, a file is held as lines that write back to the identical bytes, which the round-trip
 gate checks over every fixture on Linux and Windows, and the mutation gate checks that a write

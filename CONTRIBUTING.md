@@ -36,6 +36,39 @@ make check       # every hook over every file, which is what CI runs
   refused. What a pull request carries instead is a label saying how big it is: `major`, `minor`,
   `patch` or `no-release`.
 
+## Fixtures and their evidence
+
+Tests see `tests/fixtures/` and nothing else, and no test ever opens a real graph. Fixtures are
+invented, one directory per topic, each small enough to show at a glance what it demonstrates.
+The round-trip gate covers every markdown file under `tests/fixtures/` the moment it lands.
+
+To decide which fixtures a change needs, survey a real graph, which only reads it:
+
+```sh
+uv run --script .scripts/survey_graph.py <graph>
+```
+
+Write a fixture for every variant the survey reports, shaped like what it found but with none of
+its text: no page title, sentence or id from a real graph enters the repository. Then record
+that the fixtures share nothing with the graph, and commit what this writes:
+
+```sh
+uv run --script .scripts/check_fixture_leaks.py <graph> --record
+```
+
+The `fixture-evidence` hook fails when a fixture directory changed after its evidence was
+recorded.
+
+## The smoke test
+
+CI builds the wheel and runs every verb out of it through `uvx`, on Linux and Windows, against a
+copy of a fixture graph. Locally:
+
+```sh
+make build
+uv run --script .scripts/smoke.py dist/logseq_md-*.whl
+```
+
 ## Skill evidence
 
 `skills/logseq-md/` is the skill, and `tests/evidence/logseq-md.json` is the record that a model

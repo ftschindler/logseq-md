@@ -28,7 +28,7 @@ merged, and know what it owns, what it must not touch and what it hands on.
 - [x] **[S7](#s7---the-splice-and-the-in-block-writes)** - The splice, and the in-block writes
 - [x] **[S8](#s8---append-child-and---record-as)** - `append-child` and `--record-as`
 - [x] **[S9](#s9---the-skill)** - The skill
-- [ ] **[S10](#s10---the-release-gate)** - The release gate
+- [x] **[S10](#s10---the-release-gate)** - The release gate
 
 ## How to use it
 
