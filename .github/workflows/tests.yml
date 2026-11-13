@@ -117,6 +117,12 @@ jobs:
         uv run --no-project --with "${wheel}" logseq-md --version
         uv run --no-project --with "${wheel}" logseq-md --help
 
+    - name: Read and write a graph through uvx with that wheel
+      # Every verb once, against a copy of a fixture graph, asserting exit
+      # codes, output and the bytes each write leaves on disk. The suite proves
+      # the behaviour; this proves the wheel a stranger installs carries it.
+      run: uv run --script .scripts/smoke.py dist/*.whl
+
   tests:
     name: 🛠 (Tests)
     # The single job branch protection requires. A matrix job's check is named
